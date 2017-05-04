@@ -13,7 +13,8 @@ from hexdump import hexdump
 
 import soap2python
 from http_parser import HttpRequest, HttpResponse, HttpMessage
-from pipe import RequestResponse, Pinhole
+from pipe import Pinhole
+from request_response import RequestResponse
 
 ROLE_HTTP_MESSAGE = 45454
 ROLE_HTTP_REQUEST = 45444

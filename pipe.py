@@ -13,16 +13,14 @@ eg. pinhole 80 webserver
     pinhole 23 localhost 2323
     Forward all telnet sessions to port 2323 on localhost.
 """
+import time
 import traceback
-import uuid
 from socket import *
 from threading import Thread
-import time
-
-import collections
 
 import http_parser
 from parser_utils import intialize_parser, parse
+from request_response import Communication
 
 LOGGING = 0
 
@@ -31,63 +29,6 @@ def log(s):
     if LOGGING:
         print('%s:%s' % (time.ctime(), s))
         sys.stdout.flush()
-
-
-class RequestResponse:
-    def __init__(self, request=None, response=None):
-        self.guid = uuid.uuid4()
-        self.response = response
-        self.request = request
-
-    def __str__(self):
-        s = "====================================================\n"
-        s += "Communication " + str(self.guid) + "\n"
-        s += "REQUEST:\n"
-        s += str(self.request) + "\n"
-        s += "RESPONSE:\n"
-        s += str(self.response) + "\n"
-        s += "====================================================\n"
-        return s
-
-
-class Communication:
-    def __init__(self, listener):
-        self.pending_requests = collections.deque()
-        self.pending_responses = collections.deque()
-        self.listener = listener
-
-    def add_message(self, message, tag):
-        if tag == "request":
-            self.add_request(message)
-        elif tag == "response":
-            self.add_response(message)
-        else:
-            raise Exception("Unknown tag " + tag)
-
-    def add_request(self, request):
-        if self.pending_responses:
-            request_response = self.pending_responses.popleft()
-            request_response.request = request
-            self.have_request_response(request_response)
-        else:
-            request_response = RequestResponse(request=request)
-            self.pending_requests.append(request_response)
-            self.have_request_response(request_response)
-
-    def add_response(self, response):
-        if self.pending_requests:
-            request_response = self.pending_requests.popleft()
-            request_response.response = response
-            self.have_request_response(request_response)
-        else:
-            request_response = RequestResponse(response=response)
-            self.pending_responses.append(request_response)
-            self.have_request_response(request_response)
-
-    def have_request_response(self, request_response):
-        print(request_response)
-        if self.listener:
-            self.listener(request_response)
 
 
 class PipeThread(Thread):
