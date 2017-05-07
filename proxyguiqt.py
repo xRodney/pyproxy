@@ -1,20 +1,21 @@
+import signal
 import sys
 import urllib.request
 
+from PyQt5.QtCore import QObject, pyqtSignal, QItemSelection, QSettings
 from PyQt5.QtGui import QStandardItem, QFont
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import QLineEdit, QLabel, QTextEdit, QComboBox, QSpacerItem, QPlainTextEdit
+from PyQt5.QtWidgets import QLineEdit, QLabel, QTextEdit, QComboBox, QPlainTextEdit
 from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtWidgets import QTreeView
 from PyQt5.QtWidgets import (QWidget, QPushButton,
-    QHBoxLayout, QVBoxLayout, QApplication)
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QModelIndex, QItemSelection, QSettings
+                             QHBoxLayout, QVBoxLayout, QApplication)
 from hexdump import hexdump
 
+import apipe
 import soap2python
-from http_parser import HttpRequest, HttpResponse, HttpMessage
-from pipe import Pinhole
-from request_response import RequestResponse
+from http_parser import HttpMessage
+from request_response import RequestResponse, MessageListener
 
 ROLE_HTTP_MESSAGE = 45454
 ROLE_HTTP_REQUEST = 45444
@@ -62,14 +63,14 @@ class HttpMessagesTreeView(QTreeView):
             self.selected.emit(data)
 
 
-
-class Worker(QObject):
+class Worker(QObject, MessageListener):
     received = pyqtSignal(RequestResponse)
     error = pyqtSignal(Exception)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.thread = None
+        self.local_host = "localhost"
         self.local_port = None
         self.remote_port = None
         self.remote_host = None
@@ -77,8 +78,9 @@ class Worker(QObject):
     def start(self):
         if not self.thread:
             try:
-                self.thread = Pinhole(int(self.local_port), self.remote_host, int(self.remote_port),
-                                      listener=self.on_request_response, on_error=self.on_error)
+                self.thread = apipe.PipeThread(self.local_host, int(self.local_port),
+                                               self.remote_host, int(self.remote_port),
+                                               self)
                 self.thread.start()
             except Exception as e:
                 self.thread = None
@@ -96,13 +98,13 @@ class Worker(QObject):
     def status(self):
         return self.thread is not None
 
-    def on_request_response(self, rr):
-        self.received.emit(rr)
+    def on_request_response(self, request_response: RequestResponse):
+        self.received.emit(request_response)
 
-    def on_error(self, e):
+    def on_error(self, error):
         if self.thread:
             self.stop()
-        self.error.emit(e)
+        self.error.emit(error)
 
     def save_state(self, settings: QSettings):
         settings.setValue("local_port", self.local_port)
@@ -372,7 +374,10 @@ class BodyContentViewer(QWidget):
 
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
+
+    # Allow the app to be killed by Ctrl+C (otherwise the Qt window would stay open)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     ex = Example()
     sys.exit(app.exec_())
