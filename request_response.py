@@ -30,23 +30,35 @@ class Communication:
         self.pending_responses = collections.deque()
         self.listener = listener
 
-    def __get_address(self, address, port):
-        if port != 80:
+    def __get_address(self, address, port=None):
+        if port:
             return b"%s:%s" % (str(address).encode(), str(port).encode())
         else:
             return b"%s" % (str(address).encode())
 
-    def local_address_port(self):
+    def local_address_with_port(self):
         return self.__get_address(self.local_address, self.local_port)
 
-    def remote_address_port(self):
+    def remote_address_with_port(self):
         return self.__get_address(self.remote_address, self.remote_port)
 
+    def local_address_without_port(self):
+        return self.__get_address(self.local_address)
+
+    def remote_address_without_port(self):
+        return self.__get_address(self.remote_address)
+
     def replace_local_with_remote(self, input: bytes):
-        return input.replace(self.local_address_port(), self.remote_address_port())
+        s = input
+        s = s.replace(self.local_address_with_port(), self.remote_address_with_port())
+        s = s.replace(self.local_address_without_port(), self.remote_address_without_port())
+        return s
 
     def replace_remote_with_local(self, input: bytes):
-        return input.replace(self.remote_address_port(), self.local_address_port())
+        s = input
+        s = s.replace(self.remote_address_with_port(), self.local_address_with_port())
+        s = s.replace(self.remote_address_without_port(), self.local_address_without_port())
+        return s
 
     def replace_local_with_remote_in_header(self, msg, header):
         if msg.headers.get(header):
