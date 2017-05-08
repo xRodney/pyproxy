@@ -283,13 +283,14 @@ class SimpleRequestViewerPlugin:
 
     def __build_headers_tab(self, message: HttpMessage):
         headers = QTextEdit()
-        headers_list = (name.decode() + ": " + value.decode() for name, value in message.headers.items())
-        headers.setText(message.first_line().decode() + "\n".join(headers_list))
+        if message:
+            headers_list = (name.decode() + ": " + value.decode() for name, value in message.headers.items())
+            headers.setText(message.first_line().decode() + "\n".join(headers_list))
         headers.setReadOnly(True)
         return headers
 
     def __build_body_tab(self, message: HttpMessage):
-        if message.has_body():
+        if message and message.has_body():
             body = BodyContentViewer(self)
             body.setContent(message)
         else:
