@@ -1,6 +1,8 @@
 import collections
 import uuid
 
+from parser.http_parser import HttpRequest, HttpResponse, HttpMessage
+
 
 class RequestResponse:
     def __init__(self, request=None, response=None):
@@ -18,6 +20,14 @@ class RequestResponse:
         s += "====================================================\n"
         return s
 
+    def set_request_or_response(self, message: HttpMessage):
+        if isinstance(message, HttpRequest):
+            self.request = message
+        elif isinstance(message, HttpResponse):
+            self.response = message
+        else:
+            raise ValueError("Message must be either request or response")
+
 
 class Communication:
     def __init__(self, local_address, local_port, remote_address, remote_port, listener=None):
@@ -26,8 +36,8 @@ class Communication:
         self.local_port = local_port
         self.local_address = local_address
 
-        self.pending_requests = collections.deque()
-        self.pending_responses = collections.deque()
+        self.pending = collections.deque()
+        self.last_class_in_pending = None
         self.listener = listener
 
     def __get_address(self, address, port=None):
@@ -79,33 +89,25 @@ class Communication:
 
         return msg
 
-    def add_message(self, message, tag):
-        if tag == "request":
-            self.add_request(message)
-        elif tag == "response":
-            self.add_response(message)
-        else:
-            raise Exception("Unknown tag " + tag)
+    def add_message(self, message: HttpMessage):
+        if not isinstance(message, (HttpRequest, HttpResponse)):
+            raise Exception("Message must be either request or response")
 
-    def add_request(self, request):
-        if self.pending_responses:
-            request_response = self.pending_responses.popleft()
-            request_response.request = request
-            self.have_request_response(request_response)
+        if len(self.pending) == 0 or self.last_class_in_pending is message.__class__:
+            self.last_class_in_pending = message.__class__
+            request_response = RequestResponse()
+            self.pending.append(request_response)
         else:
-            request_response = RequestResponse(request=request)
-            self.pending_requests.append(request_response)
-            self.have_request_response(request_response)
+            request_response = self.pending.popleft()
 
-    def add_response(self, response):
-        if self.pending_requests:
-            request_response = self.pending_requests.popleft()
-            request_response.response = response
-            self.have_request_response(request_response)
-        else:
-            request_response = RequestResponse(response=response)
-            self.pending_responses.append(request_response)
-            self.have_request_response(request_response)
+        request_response.set_request_or_response(message)
+        self.have_request_response(request_response)
+
+    def add_request(self, request: HttpRequest):
+        self.add_message(request)
+
+    def add_response(self, response: HttpResponse):
+        self.add_message(response)
 
     def have_request_response(self, request_response):
         if self.listener:

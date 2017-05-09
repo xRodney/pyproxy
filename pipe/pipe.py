@@ -20,7 +20,7 @@ from threading import Thread
 
 import parser
 from parser.parser_utils import intialize_parser, parse
-from pipe.request_response import Communication
+from pipe.communication import Communication
 
 LOGGING = 0
 

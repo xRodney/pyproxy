@@ -14,7 +14,7 @@ from hexdump import hexdump
 
 from parser.http_parser import HttpMessage
 from pipe import apipe
-from pipe.request_response import RequestResponse, MessageListener
+from pipe.communication import RequestResponse, MessageListener
 from utils import soap2python
 
 ROLE_HTTP_MESSAGE = 45454
