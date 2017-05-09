@@ -7,9 +7,9 @@ import logging
 import sys
 from threading import Thread
 
-import http_parser
-from parser_utils import intialize_parser, parse
-from request_response import Communication, MessageListener
+from parser import http_parser
+from parser.parser_utils import intialize_parser, parse
+from pipe.request_response import Communication, MessageListener
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5

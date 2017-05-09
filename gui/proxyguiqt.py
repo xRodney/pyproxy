@@ -12,10 +12,10 @@ from PyQt5.QtWidgets import (QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout, QApplication)
 from hexdump import hexdump
 
-import apipe
-import soap2python
-from http_parser import HttpMessage
-from request_response import RequestResponse, MessageListener
+from parser.http_parser import HttpMessage
+from pipe import apipe
+from pipe.request_response import RequestResponse, MessageListener
+from utils import soap2python
 
 ROLE_HTTP_MESSAGE = 45454
 ROLE_HTTP_REQUEST = 45444
@@ -373,8 +373,7 @@ class BodyContentViewer(QWidget):
             self.vbox.addWidget(newWidget)
 
 
-
-if __name__ == '__main__':
+def main():
     app = QApplication(sys.argv)
 
     # Allow the app to be killed by Ctrl+C (otherwise the Qt window would stay open)

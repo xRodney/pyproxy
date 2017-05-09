@@ -1,6 +1,6 @@
 import gzip
 
-from parser_utils import get_bytes, get_more, get_word, get_rest, get_until
+from parser.parser_utils import get_bytes, get_word, get_rest, get_until
 
 CRLF = "\r\n"
 

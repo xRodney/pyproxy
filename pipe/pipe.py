@@ -18,9 +18,9 @@ import traceback
 from socket import *
 from threading import Thread
 
-import http_parser
-from parser_utils import intialize_parser, parse
-from request_response import Communication
+import parser
+from parser.parser_utils import intialize_parser, parse
+from pipe.request_response import Communication
 
 LOGGING = 0
 
@@ -62,7 +62,7 @@ class PipeThread(Thread):
             self.send(data)
 
     def run(self):
-        parser = intialize_parser(http_parser.get_http_request)
+        parser = intialize_parser(parser.get_http_request)
         while not self.stopped:
             try:
                 try:
