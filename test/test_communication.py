@@ -3,7 +3,7 @@ from collections import OrderedDict
 import pytest
 
 from parser.http_parser import HttpRequest, HttpResponse
-from pipe.communication import Communication, MessageListener, RequestResponse
+from pipe.communication import MessagePairer, MessageListener, RequestResponse
 
 
 class TestListener(MessageListener):
@@ -37,8 +37,8 @@ class TestListener(MessageListener):
 
 
 @pytest.fixture
-def comm():
-    return Communication("localhost", 8080, "remotehost", 80, TestListener())
+def pairer():
+    return MessagePairer(TestListener())
 
 
 def request(body):
@@ -53,85 +53,85 @@ def response(body):
     return resp
 
 
-def test_one_request_response(comm: Communication):
-    listener = comm.listener
+def test_one_request_response(pairer: MessagePairer):
+    listener = pairer.listener
 
-    comm.add_request(request(b"1"))
+    pairer.add_request(request(b"1"))
     listener.assert_calls_and_pairs_number(1, 1)
     listener.assert_just_request(0)
 
-    comm.add_response(response(b"1"))
+    pairer.add_response(response(b"1"))
     listener.assert_calls_and_pairs_number(2, 1)
     listener.assert_request_and_response_match(1)
 
 
-def test_one_response_request(comm: Communication):
-    listener = comm.listener
+def test_one_response_request(pairer: MessagePairer):
+    listener = pairer.listener
 
-    comm.add_response(response(b"1"))
+    pairer.add_response(response(b"1"))
     listener.assert_calls_and_pairs_number(1, 1)
     listener.assert_just_response(0)
 
-    comm.add_request(request(b"1"))
+    pairer.add_request(request(b"1"))
     listener.assert_calls_and_pairs_number(2, 1)
     listener.assert_request_and_response_match(1)
 
 
-def test_two_requests_two_responses(comm: Communication):
-    listener = comm.listener
+def test_two_requests_two_responses(pairer: MessagePairer):
+    listener = pairer.listener
 
-    comm.add_request(request(b"1"))
+    pairer.add_request(request(b"1"))
     listener.assert_calls_and_pairs_number(1, 1)
     listener.assert_just_request(0)
 
-    comm.add_request(request(b"2"))
+    pairer.add_request(request(b"2"))
     listener.assert_calls_and_pairs_number(2, 2)
     listener.assert_just_request(1)
 
-    comm.add_response(response(b"1"))
+    pairer.add_response(response(b"1"))
     listener.assert_calls_and_pairs_number(3, 2)
     listener.assert_request_and_response_match(2)
 
-    comm.add_response(response(b"2"))
+    pairer.add_response(response(b"2"))
     listener.assert_calls_and_pairs_number(4, 2)
     listener.assert_request_and_response_match(3)
 
 
-def test_two_responses_two_requests(comm: Communication):
-    listener = comm.listener
+def test_two_responses_two_requests(pairer: MessagePairer):
+    listener = pairer.listener
 
-    comm.add_response(response(b"1"))
+    pairer.add_response(response(b"1"))
     listener.assert_calls_and_pairs_number(1, 1)
     listener.assert_just_response(0)
 
-    comm.add_response(response(b"2"))
+    pairer.add_response(response(b"2"))
     listener.assert_calls_and_pairs_number(2, 2)
     listener.assert_just_response(1)
 
-    comm.add_request(request(b"1"))
+    pairer.add_request(request(b"1"))
     listener.assert_calls_and_pairs_number(3, 2)
     listener.assert_request_and_response_match(2)
 
-    comm.add_request(request(b"2"))
+    pairer.add_request(request(b"2"))
     listener.assert_calls_and_pairs_number(4, 2)
     listener.assert_request_and_response_match(3)
 
 
-def test_interleaved(comm: Communication):
-    listener = comm.listener
+def test_interleaved(pairer: MessagePairer):
+    listener = pairer.listener
 
-    comm.add_message(response(b"1"))
+    pairer.add_message(response(b"1"))
     listener.assert_calls_and_pairs_number(1, 1)
     listener.assert_just_response(0)
 
-    comm.add_message(request(b"1"))
+    pairer.add_message(request(b"1"))
     listener.assert_calls_and_pairs_number(2, 1)
     listener.assert_request_and_response_match(1)
 
-    comm.add_message(request(b"2"))
+    pairer.add_message(request(b"2"))
     listener.assert_calls_and_pairs_number(3, 2)
     listener.assert_just_request(2)
 
-    comm.add_message(response(b"2"))
+    pairer.add_message(response(b"2"))
     listener.assert_calls_and_pairs_number(4, 2)
     listener.assert_request_and_response_match(3)

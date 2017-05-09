@@ -9,7 +9,7 @@ from threading import Thread
 
 from parser import http_parser
 from parser.parser_utils import intialize_parser, parse
-from pipe.communication import Communication, MessageListener
+from pipe.communication import MessageListener, MessagePairer, MessageProcessor
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
@@ -46,15 +46,15 @@ def remote_connection_string(writer):
         writer.get_extra_info('peername'))
 
 
-async def proxy_data(reader, writer, connection_string, communication):
+async def proxy_data(reader, writer, connection_string, pairer, processor):
     try:
         parser = intialize_parser(http_parser.get_http_request)
         while True:
             data = await reader.read(BUFFER_SIZE)
 
             for msg in parse(parser, data):
-                msg = communication.process_message(msg)
-                communication.add_message(msg)
+                msg = processor.process_message(msg)
+                pairer.add_message(msg)
                 for data in msg.to_bytes():
                     writer.write(data)
                 await writer.drain()
@@ -86,9 +86,12 @@ async def accept_client(client_reader, client_writer, local_address, local_port,
     else:
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
-        communication = Communication(local_address, local_port, remote_address, remote_port, listener)
-        asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, communication))
-        asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, communication))
+
+        pairer = MessagePairer(listener)
+        processor = MessageProcessor(local_address, local_port, remote_address, remote_port)
+
+        asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, pairer, processor))
+        asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, pairer, processor))
 
 
 def parse_addr_port_string(addr_port_string):

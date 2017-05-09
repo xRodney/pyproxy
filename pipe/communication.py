@@ -29,16 +29,12 @@ class RequestResponse:
             raise ValueError("Message must be either request or response")
 
 
-class Communication:
-    def __init__(self, local_address, local_port, remote_address, remote_port, listener=None):
+class MessageProcessor:
+    def __init__(self, local_address, local_port, remote_address, remote_port):
         self.remote_port = remote_port
         self.remote_address = remote_address
         self.local_port = local_port
         self.local_address = local_address
-
-        self.pending = collections.deque()
-        self.last_class_in_pending = None
-        self.listener = listener
 
     def __get_address(self, address, port=None):
         if port:
@@ -88,6 +84,13 @@ class Communication:
             msg.headers[b"Content-Length"] = str(len(msg.body)).encode()
 
         return msg
+
+
+class MessagePairer:
+    def __init__(self, listener=None):
+        self.pending = collections.deque()
+        self.last_class_in_pending = None
+        self.listener = listener
 
     def add_message(self, message: HttpMessage):
         if not isinstance(message, (HttpRequest, HttpResponse)):
