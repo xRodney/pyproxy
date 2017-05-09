@@ -78,7 +78,7 @@ class Communication:
         if msg.headers.get(header):
             msg.headers[header] = self.replace_remote_with_local(msg.headers[header])
 
-    def process_message(self, msg, tag):
+    def process_message(self, msg):
         self.replace_local_with_remote_in_header(msg, b"Host")
         self.replace_local_with_remote_in_header(msg, b"Referer")
         self.replace_remote_with_local_in_header(msg, b"Location")

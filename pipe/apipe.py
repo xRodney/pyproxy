@@ -46,15 +46,15 @@ def remote_connection_string(writer):
         writer.get_extra_info('peername'))
 
 
-async def proxy_data(reader, writer, connection_string, communication, tag):
+async def proxy_data(reader, writer, connection_string, communication):
     try:
         parser = intialize_parser(http_parser.get_http_request)
         while True:
             data = await reader.read(BUFFER_SIZE)
 
             for msg in parse(parser, data):
-                msg = communication.process_message(msg, tag)
-                communication.add_message(msg, tag)
+                msg = communication.process_message(msg)
+                communication.add_message(msg)
                 for data in msg.to_bytes():
                     writer.write(data)
                 await writer.drain()
@@ -87,8 +87,8 @@ async def accept_client(client_reader, client_writer, local_address, local_port,
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
         communication = Communication(local_address, local_port, remote_address, remote_port, listener)
-        asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, communication, "request"))
-        asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, communication, "response"))
+        asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, communication))
+        asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, communication))
 
 
 def parse_addr_port_string(addr_port_string):
