@@ -1,6 +1,7 @@
 import signal
 import sys
 import urllib.request
+from collections import OrderedDict
 
 from PyQt5.QtCore import QObject, pyqtSignal, QItemSelection, QSettings
 from PyQt5.QtGui import QStandardItem, QFont
@@ -15,6 +16,7 @@ from hexdump import hexdump
 from parser.http_parser import HttpMessage
 from pipe import apipe
 from pipe.communication import RequestResponse, MessageListener
+from pipe.persistence import serialize_message_pair
 from utils import soap2python
 
 ROLE_HTTP_MESSAGE = 45454
@@ -25,26 +27,36 @@ ROLE_HTTP_RESPONSE = 45455
 class HttpMessagesTreeView(QTreeView):
     selected = pyqtSignal(object)
 
+    class ModelItem:
+        def __init__(self, model, branch):
+            self.branch = branch
+            self.model = model
+
     def __init__(self, plugins, parent=None):
         super().__init__(parent)
         self.plugins = plugins
         self.clear()
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 
-    def getBranch(self, guid):
-        if guid in self.__index:
-            branch = self.__index[guid]
+    def getBranch(self, rr: RequestResponse):
+        if rr.guid in self.__index:
+            model_item = self.__index[rr.guid]
+            branch = model_item.branch
+            model_item.model = rr
         else:
             branch = [QStandardItem(), QStandardItem(), QStandardItem()]
             self.rootNode.appendRow(branch)
-            self.__index[guid] = branch
+            self.__index[rr.guid] = HttpMessagesTreeView.ModelItem(rr, branch)
 
         return branch
+
+    def getAllMessagePairs(self):
+        return (item.model for item in self.__index.values())
 
     def clear(self):
         self.model = QStandardItemModel()
         self.rootNode = self.model.invisibleRootItem()
-        self.__index = {}
+        self.__index = OrderedDict()
         self.setModel(self.model)
 
     def applyModel(self):
@@ -161,11 +173,13 @@ class Example(QWidget):
         self.stopButton = QPushButton("Stop")
         self.restartButton = QPushButton("Restart")
         self.requestButton = QPushButton("Request")
+        self.saveButton = QPushButton("Save")
 
         self.startButton.clicked.connect(self.onStartClicked)
         self.stopButton.clicked.connect(self.onStopClicked)
         self.restartButton.clicked.connect(self.onRestartClicked)
         self.requestButton.clicked.connect(self.onRequestClicked)
+        self.saveButton.clicked.connect(self.onSaveClicked)
         self.worker.received.connect(self.onReceived)
         self.worker.error.connect(self.onError)
 
@@ -174,6 +188,7 @@ class Example(QWidget):
         hbox.addWidget(self.stopButton)
         hbox.addWidget(self.restartButton)
         hbox.addWidget(self.requestButton)
+        hbox.addWidget(self.saveButton)
 
         self.treeView = HttpMessagesTreeView(self.plugins, self)
         self.treeView.selected.connect(self.onMessageSelected)
@@ -209,6 +224,12 @@ class Example(QWidget):
     def onRequestClicked(self):
         urllib.request.urlopen("http://localhost:" + self.worker.local_port)
 
+    def onSaveClicked(self, event):
+        f = open("myfile.dat", "wb")
+        for pair in self.treeView.getAllMessagePairs():
+            serialize_message_pair(pair, f)
+        f.close()
+
     def closeEvent(self, QCloseEvent):
         if self.worker.status():
             self.worker.stop()
@@ -218,7 +239,7 @@ class Example(QWidget):
         super().closeEvent(QCloseEvent)
 
     def onReceived(self, rr: RequestResponse):
-        branch = self.treeView.getBranch(rr.guid)
+        branch = self.treeView.getBranch(rr)
         self.plugins.on_request_response(rr.request, rr.response, branch)
         self.treeView.applyModel()
 
