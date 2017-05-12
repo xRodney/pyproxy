@@ -1,4 +1,5 @@
 import gzip
+from collections import OrderedDict
 
 from parser.parser_utils import get_bytes, get_word, get_rest, get_until
 
@@ -8,7 +9,7 @@ CRLF = "\r\n"
 class HttpMessage:
     def __init__(self):
         self.version = None
-        self.headers = dict()
+        self.headers = OrderedDict()
         self.body = None
         self.__body_as_text = None
 
@@ -161,7 +162,7 @@ def get_firstline(data):
 
 
 def get_headers(data):
-    headers = {}
+    headers = OrderedDict()
     line, data = yield from get_line(data)
     name = None
     value = None
