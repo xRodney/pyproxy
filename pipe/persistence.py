@@ -1,7 +1,7 @@
 from io import BufferedIOBase
 from uuid import UUID
 
-from parser.http_parser import HttpMessage, get_http_request
+from parser.http_parser import HttpMessage, get_http_request, get_line
 from parser.parser_utils import get_word, intialize_parser, parse
 from pipe.communication import RequestResponse
 
@@ -9,25 +9,25 @@ from pipe.communication import RequestResponse
 def serialize_message(msg: HttpMessage, stream: BufferedIOBase):
     for b in msg.to_bytes():
         stream.write(b)
-    stream.write(b"\n")
+    stream.write(b"\r\n")
 
 
 def serialize_message_pair(rr: RequestResponse, stream: BufferedIOBase):
     stream.write(b"Pair: ")
     stream.write(str(rr.guid.hex).encode())
-    stream.write(b"\n")
+    stream.write(b"\r\n")
 
     if rr.request:
         stream.write(b"Request: ")
         serialize_message(rr.request, stream)
     else:
-        stream.write(b"NoRequest\n")
+        stream.write(b"NoRequest\r\n")
 
     if rr.response:
         stream.write(b"Response: ")
         serialize_message(rr.response, stream)
     else:
-        stream.write(b"NoResponse\n")
+        stream.write(b"NoResponse\r\n")
 
 
 def parse_message_pair(data):
@@ -39,11 +39,13 @@ def parse_message_pair(data):
 
     kw, data = yield from get_word(data)
     if kw == b"Request:":
-        rr.request, data = get_http_request(data)
+        rr.request, data = yield from get_http_request(data)
+        _, data = yield from get_line(data)  # Read the newline
 
     kw, data = yield from get_word(data)
     if kw == b"Response:":
-        rr.response, data = get_http_request(data)
+        rr.response, data = yield from get_http_request(data)
+        _, data = yield from get_line(data)  # Read the newline
 
     return rr, data
 

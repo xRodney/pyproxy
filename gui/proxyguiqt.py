@@ -16,7 +16,7 @@ from hexdump import hexdump
 from parser.http_parser import HttpMessage
 from pipe import apipe
 from pipe.communication import RequestResponse, MessageListener
-from pipe.persistence import serialize_message_pair
+from pipe.persistence import serialize_message_pair, parse_message_pairs
 from utils import soap2python
 
 ROLE_HTTP_MESSAGE = 45454
@@ -174,12 +174,14 @@ class Example(QWidget):
         self.restartButton = QPushButton("Restart")
         self.requestButton = QPushButton("Request")
         self.saveButton = QPushButton("Save")
+        self.loadButton = QPushButton("Load")
 
         self.startButton.clicked.connect(self.onStartClicked)
         self.stopButton.clicked.connect(self.onStopClicked)
         self.restartButton.clicked.connect(self.onRestartClicked)
         self.requestButton.clicked.connect(self.onRequestClicked)
         self.saveButton.clicked.connect(self.onSaveClicked)
+        self.loadButton.clicked.connect(self.onLoadClicked)
         self.worker.received.connect(self.onReceived)
         self.worker.error.connect(self.onError)
 
@@ -189,6 +191,7 @@ class Example(QWidget):
         hbox.addWidget(self.restartButton)
         hbox.addWidget(self.requestButton)
         hbox.addWidget(self.saveButton)
+        hbox.addWidget(self.loadButton)
 
         self.treeView = HttpMessagesTreeView(self.plugins, self)
         self.treeView.selected.connect(self.onMessageSelected)
@@ -228,6 +231,15 @@ class Example(QWidget):
         f = open("myfile.dat", "wb")
         for pair in self.treeView.getAllMessagePairs():
             serialize_message_pair(pair, f)
+        f.close()
+
+    def onLoadClicked(self, event):
+        self.load("TBD")
+
+    def load(self, filename):
+        f = open("myfile.dat", "rb")
+        for pair in parse_message_pairs(f):
+            self.onReceived(pair)
         f.close()
 
     def closeEvent(self, QCloseEvent):
@@ -401,4 +413,6 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     ex = Example()
+    if len(sys.argv) == 2:
+        ex.load(sys.argv[1])
     sys.exit(app.exec_())
