@@ -1,7 +1,7 @@
 import urllib.request
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QTabWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QTabWidget, QVBoxLayout, QMessageBox
 
 from gui.plugins.simple_request_viewer_plugin import SimpleRequestViewerPlugin
 from gui.widgets.http_messages_tree_view import HttpMessagesTreeView
@@ -102,7 +102,15 @@ class MainWindow(QWidget):
         self.update_status()
 
     def onRequestClicked(self):
-        urllib.request.urlopen("http://localhost:" + self.worker.local_port)
+        try:
+            urllib.request.urlopen("http://localhost:" + self.worker.local_port)
+        except Exception as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("The request resulted in an error:")
+            msg.setInformativeText(str(e))
+            msg.setWindowTitle("Error")
+            msg.exec_()
 
     def onSaveClicked(self, event):
         f = open("myfile.dat", "wb")
@@ -134,6 +142,12 @@ class MainWindow(QWidget):
 
     def onError(self, e: Exception):
         self.update_status()
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("There was an error:")
+        msg.setInformativeText(str(e))
+        msg.setWindowTitle("Error")
+        msg.exec_()
 
     def onMessageSelected(self, message: HttpMessage):
         self.plugins.on_message_selected(message, self.tabs)

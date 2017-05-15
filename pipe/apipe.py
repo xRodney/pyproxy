@@ -146,9 +146,14 @@ class PipeThread(Thread):
             pass
 
     def start_proxy(self, local_address, local_port, remote_address, remote_port):
-        asyncio.run_coroutine_threadsafe(self.__start_proxy(local_address, local_port, remote_address, remote_port),
-                                         self.loop)
-        self.__is_running = True
+        future = asyncio.run_coroutine_threadsafe(
+            self.__start_proxy(local_address, local_port, remote_address, remote_port),
+            self.loop)
+        ex = future.exception()
+        if ex:
+            raise ex
+        else:
+            self.__is_running = True
 
     async def __start_proxy(self, local_address, local_port, remote_address, remote_port):
         assert threading.current_thread() is self
@@ -163,8 +168,9 @@ class PipeThread(Thread):
 
     async def __stop_proxy(self):
         assert threading.current_thread() is self
-        self.server.close()
-        await self.server.wait_closed()
+        if self.server:
+            self.server.close()
+            await self.server.wait_closed()
         self.server = None
 
     def is_running(self):

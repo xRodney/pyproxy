@@ -20,8 +20,11 @@ class Worker(QObject, MessageListener):
         if not self.thread.is_alive():
             self.thread.start()
 
-        self.thread.start_proxy(self.local_host, int(self.local_port),
-                                self.remote_host, int(self.remote_port))
+        try:
+            self.thread.start_proxy(self.local_host, int(self.local_port),
+                                    self.remote_host, int(self.remote_port))
+        except Exception as ex:
+            self.on_error(ex)
 
     def stop(self):
         if self.thread.is_alive():
@@ -34,8 +37,7 @@ class Worker(QObject, MessageListener):
         self.received.emit(request_response)
 
     def on_error(self, error):
-        if self.thread:
-            self.stop()
+        self.stop()
         self.error.emit(error)
 
     def save_state(self, settings: QSettings):
