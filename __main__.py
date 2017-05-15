@@ -1,3 +1,3 @@
-import gui.proxyguiqt
+import gui.main
 
-gui.proxyguiqt.main()
+gui.main.main()
