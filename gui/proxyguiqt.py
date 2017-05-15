@@ -81,34 +81,25 @@ class Worker(QObject, MessageListener):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.thread = None
+        self.thread = apipe.PipeThread(self)
         self.local_host = "localhost"
         self.local_port = None
         self.remote_port = None
         self.remote_host = None
 
     def start(self):
-        if not self.thread:
-            try:
-                self.thread = apipe.PipeThread(self.local_host, int(self.local_port),
-                                               self.remote_host, int(self.remote_port),
-                                               self)
-                self.thread.start()
-            except Exception as e:
-                self.thread = None
-                raise e
-        else:
-            raise Exception("Already running")
+        if not self.thread.is_alive():
+            self.thread.start()
+
+        self.thread.start_proxy(self.local_host, int(self.local_port),
+                                self.remote_host, int(self.remote_port))
 
     def stop(self):
-        if self.thread:
-            self.thread.stop()
-            self.thread = None
-        else:
-            raise Exception("Already stopped")
+        if self.thread.is_alive():
+            self.thread.stop_proxy()
 
     def status(self):
-        return self.thread is not None
+        return self.thread.is_running()
 
     def on_request_response(self, request_response: RequestResponse):
         self.received.emit(request_response)
@@ -133,7 +124,6 @@ class Worker(QObject, MessageListener):
 
 
 class Example(QWidget):
-
     def __init__(self):
         super().__init__()
         self.worker = Worker()
@@ -148,7 +138,6 @@ class Example(QWidget):
         self.worker.restore_state(self.settings)
 
         self.initUI()
-
 
     def initUI(self):
 
@@ -266,9 +255,9 @@ class Example(QWidget):
         self.startButton.setDisabled(status)
         self.stopButton.setDisabled(not status)
         self.restartButton.setDisabled(not status)
-        self.requestButton.setDisabled(not status)
+        # self.requestButton.setDisabled(not status)
 
-        
+
 class SimpleRequestViewerPlugin:
     def get_column_names(self):
         return ("Request", "Response", "Soap method")
@@ -278,7 +267,7 @@ class SimpleRequestViewerPlugin:
 
         requestNode.setData((request, response), ROLE_HTTP_MESSAGE)
 
-        #branch.removeColumns(0, branch.columnCount())
+        # branch.removeColumns(0, branch.columnCount())
         request_str = request.first_line().decode().split("\r\n")[0] if request else "Unmatched"
         response_str = response.first_line().decode().split("\r\n")[0] if response else "Unmatched"
 
@@ -298,7 +287,6 @@ class SimpleRequestViewerPlugin:
                 return str(ex)
 
         return ""
-
 
     def on_message_selected(self, data, tab_view):
         selected_tab = tab_view.currentIndex()
@@ -379,6 +367,7 @@ class SimpleRequestViewerPlugin:
         body.setReadOnly(True)
         return body
 
+
 class BodyContentViewer(QWidget):
     def __init__(self, plugins, parent=None):
         super().__init__(parent)
@@ -387,7 +376,7 @@ class BodyContentViewer(QWidget):
         self.combo = QComboBox()
         vbox.addWidget(self.combo)
         vbox.addStretch()
-        vbox.itemAt(vbox.count()-1)
+        vbox.itemAt(vbox.count() - 1)
         self.vbox = vbox
         self.setLayout(vbox)
         self.combo.currentIndexChanged.connect(self.onComboChanged)
@@ -402,7 +391,7 @@ class BodyContentViewer(QWidget):
         function = self.combo.currentData()
         if function:
             newWidget = function(self.data, self)
-            self.vbox.removeItem(self.vbox.itemAt(self.vbox.count()-1))
+            self.vbox.removeItem(self.vbox.itemAt(self.vbox.count() - 1))
             self.vbox.addWidget(newWidget)
 
 

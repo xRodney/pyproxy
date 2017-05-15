@@ -5,6 +5,7 @@
 import asyncio
 import logging
 import sys
+import threading
 from threading import Thread
 
 from parser import http_parser
@@ -106,7 +107,7 @@ def print_usage_and_exit():
     sys.exit(1)
 
 
-def prepare_server(loop, local_address, local_port, remote_address, remote_port, listener=None):
+async def prepare_server(local_address, local_port, remote_address, remote_port, listener=None):
     def handle_client(client_reader, client_writer):
         asyncio.ensure_future(accept_client(
             client_reader=client_reader, client_writer=client_writer,
@@ -116,9 +117,8 @@ def prepare_server(loop, local_address, local_port, remote_address, remote_port,
         ))
 
     try:
-        server_future = asyncio.start_server(
+        server = await asyncio.start_server(
             handle_client, host=local_address, port=local_port)
-        server = loop.run_until_complete(server_future)
     except Exception as e:
         logger.error('Bind error: {}'.format(e))
         raise
@@ -130,30 +130,45 @@ def prepare_server(loop, local_address, local_port, remote_address, remote_port,
 
 
 class PipeThread(Thread):
-    def __init__(self, local_address, local_port, remote_address, remote_port, listener):
-        Thread.__init__(self)
+    def __init__(self, listener):
+        Thread.__init__(self, daemon=True)
         self.listener = listener
-        self.remote_port = remote_port
-        self.remote_address = remote_address
-        self.local_port = local_port
-        self.local_address = local_address
+        self.server = None
+        self.__is_running = False
+        self.loop = asyncio.new_event_loop()
 
     def run(self):
-        self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        self.server = prepare_server(self.loop,
-                                     self.local_address, self.local_port,
-                                     self.remote_address, self.remote_port,
-                                     self.listener)
 
         try:
             self.loop.run_forever()
         except KeyboardInterrupt:
             pass
 
-    def stop(self):
+    def start_proxy(self, local_address, local_port, remote_address, remote_port):
+        asyncio.run_coroutine_threadsafe(self.__start_proxy(local_address, local_port, remote_address, remote_port),
+                                         self.loop)
+        self.__is_running = True
+
+    async def __start_proxy(self, local_address, local_port, remote_address, remote_port):
+        assert threading.current_thread() is self
+        self.server = await prepare_server(local_address, local_port,
+                                           remote_address, remote_port,
+                                           self.listener)
+        assert self.server is not None
+
+    def stop_proxy(self):
+        asyncio.run_coroutine_threadsafe(self.__stop_proxy(), self.loop)
+        self.__is_running = False
+
+    async def __stop_proxy(self):
+        assert threading.current_thread() is self
         self.server.close()
-        self.loop.stop()
+        await self.server.wait_closed()
+        self.server = None
+
+    def is_running(self):
+        return self.__is_running
 
 
 if __name__ == '__main__':
@@ -166,7 +181,8 @@ if __name__ == '__main__':
         print_usage_and_exit()
     else:
         loop = asyncio.get_event_loop()
-        prepare_server(loop, local_address, local_port, remote_address, remote_port, MessageListener())
+        loop.run_until_complete(
+            prepare_server(local_address, local_port, remote_address, remote_port, MessageListener()))
         try:
             loop.run_forever()
         except KeyboardInterrupt:
