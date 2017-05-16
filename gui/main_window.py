@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QTabWi
 
 from gui.plugins import PLUGINS
 from gui.plugins.plugin_registry import PluginRegistry
-from gui.plugins.simple_request_viewer_plugin import SimpleRequestViewerPlugin
+from gui.widgets.http_messages_tabs import HttpMessagesTabs
 from gui.widgets.http_messages_tree_view import HttpMessagesTreeView
 from gui.worker import Worker
 from parser.http_parser import HttpMessage
@@ -17,7 +17,6 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.worker = Worker()
-        self.plugins = SimpleRequestViewerPlugin()
         self.plugin_registry = PluginRegistry()
         self.plugin_registry.plugins = PLUGINS
 
@@ -77,7 +76,7 @@ class MainWindow(QWidget):
         self.treeView = HttpMessagesTreeView(self.plugin_registry, self)
         self.treeView.selected.connect(self.onMessageSelected)
 
-        self.tabs = QTabWidget(self)
+        self.tabs = HttpMessagesTabs(self.plugin_registry)
 
         vbox = QVBoxLayout()
         vbox.addLayout(configLayout)
@@ -152,7 +151,7 @@ class MainWindow(QWidget):
         msg.exec_()
 
     def onMessageSelected(self, message: HttpMessage):
-        self.plugins.on_message_selected(message, self.tabs)
+        self.tabs.onMessageSelected(message)
 
     def update_status(self):
         status = self.worker.status()

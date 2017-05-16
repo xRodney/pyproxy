@@ -1,4 +1,8 @@
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QPlainTextEdit
+
 from gui.plugins.plugin_registry import GridPlugin
+from parser.http_parser import HttpMessage
 from utils import soap2python
 
 
@@ -18,6 +22,27 @@ class SoapPlugin(GridPlugin):
                 return element.tag
             except Exception as ex:
                 return str(ex)
+
+    def get_content_representations(self, data: HttpMessage):
+        if self.__is_soap(data):
+            yield ("SOAP", self.soap_representation)
+
+    def soap_representation(self, data: HttpMessage, parent_widget):
+        body = QPlainTextEdit(parent_widget)
+        font = QFont("Courier")
+        font.setStyleHint(QFont.Monospace)
+        body.setFont(font)
+
+        try:
+            element = soap2python.parse_soap_from_string(data.body_as_text())
+            soap_text = soap2python.print_method(element, "client")
+            body.setPlainText(soap_text)
+        except Exception as ex:
+            body.setPlainText(str(ex))
+
+        body.setLineWrapMode(QPlainTextEdit.NoWrap)
+        body.setReadOnly(True)
+        return body
 
     def __is_soap(self, request):
         return b"soap" in request.get_content_type() or (

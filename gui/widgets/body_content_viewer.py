@@ -4,9 +4,9 @@ from parser.http_parser import HttpMessage
 
 
 class BodyContentViewer(QWidget):
-    def __init__(self, plugins, parent=None):
+    def __init__(self, plugin_registry, parent=None):
         super().__init__(parent)
-        self.plugins = plugins
+        self.plugin_registry = plugin_registry
         vbox = QVBoxLayout()
         self.combo = QComboBox()
         vbox.addWidget(self.combo)
@@ -19,7 +19,7 @@ class BodyContentViewer(QWidget):
     def setContent(self, data: HttpMessage):
         self.data = data
         self.combo.clear()
-        for title, function in self.plugins.get_content_representations(data):
+        for title, function in self.plugin_registry.get_content_representations(data):
             self.combo.addItem(title, function)
 
     def onComboChanged(self):
