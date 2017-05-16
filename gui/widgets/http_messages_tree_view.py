@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from PyQt5.QtCore import pyqtSignal, QItemSelection
+from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QTreeView
 
@@ -17,11 +17,12 @@ class HttpMessagesTreeView(QTreeView):
             self.branch = branch
             self.model = model
 
-    def __init__(self, plugins, parent=None):
+    def __init__(self, plugin_registry, parent=None):
         super().__init__(parent)
-        self.plugins = plugins
+        self.plugin_registry = plugin_registry
         self.clear()
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
+        self.column_definitions = self.plugin_registry.get_columns()
 
     def getBranch(self, rr: RequestResponse):
         if rr.guid in self.__index:
@@ -29,7 +30,7 @@ class HttpMessagesTreeView(QTreeView):
             branch = model_item.branch
             model_item.model = rr
         else:
-            branch = [QStandardItem(), QStandardItem(), QStandardItem()]
+            branch = [QStandardItem() for x in self.column_definitions]
             self.rootNode.appendRow(branch)
             self.__index[rr.guid] = HttpMessagesTreeView.ModelItem(rr, branch)
 
@@ -46,6 +47,8 @@ class HttpMessagesTreeView(QTreeView):
 
     def applyModel(self):
         self.setModel(self.model)
+        for i, column in enumerate(self.column_definitions):
+            self.model.setHeaderData(i, Qt.Horizontal, column[1]);
         column_count = self.model.columnCount()
         column_width = self.width() / column_count
         for col in range(0, column_count):
@@ -58,3 +61,14 @@ class HttpMessagesTreeView(QTreeView):
         data = item.data(ROLE_HTTP_MESSAGE)
         if data:
             self.selected.emit(data)
+
+    def onRequestResponse(self, request_response):
+        branch = self.getBranch(request_response)
+        branch[0].setData(request_response, ROLE_HTTP_MESSAGE)
+
+        for i, column in enumerate(self.column_definitions):
+            text = self.plugin_registry.get_cell_content(request_response, column[0])
+            if text:
+                branch[i].setText(text)
+
+        self.applyModel()

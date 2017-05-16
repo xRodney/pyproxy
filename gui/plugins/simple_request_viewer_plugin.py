@@ -9,41 +9,13 @@ from utils import soap2python
 
 
 class SimpleRequestViewerPlugin:
-    def get_column_names(self):
-        return ("Request", "Response", "Soap method")
-
-    def on_request_response(self, request, response, branch):
-        requestNode, responseNode, descriptionNode = branch
-
-        requestNode.setData((request, response), ROLE_HTTP_MESSAGE)
-
-        # branch.removeColumns(0, branch.columnCount())
-        request_str = request.first_line().decode().split("\r\n")[0] if request else "Unmatched"
-        response_str = response.first_line().decode().split("\r\n")[0] if response else "Unmatched"
-
-        description = self.get_description(request, response)
-
-        requestNode.setText(request_str)
-        responseNode.setText(response_str)
-        descriptionNode.setText(description)
-
-    def get_description(self, request, response):
-        if b"soap" in request.get_content_type() or (
-                        b"xml" in request.get_content_type() and "schemas.xmlsoap.org" in request.body_as_text()):
-            try:
-                element = soap2python.parse_soap_from_string(request.body_as_text())
-                return element.tag
-            except Exception as ex:
-                return str(ex)
-
-        return ""
-
-    def on_message_selected(self, data, tab_view):
+    def on_message_selected(self, request_response, tab_view):
         selected_tab = tab_view.currentIndex()
         while tab_view.count():
             tab_view.removeTab(0)
 
-        request, response = data
+        request = request_response.request
+        response = request_response.response
 
         tab_view.addTab(self.__build_headers_tab(request), "Request head")
         tab_view.addTab(self.__build_body_tab(request), "Request body")

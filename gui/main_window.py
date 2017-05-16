@@ -3,6 +3,8 @@ import urllib.request
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QTabWidget, QVBoxLayout, QMessageBox
 
+from gui.plugins import PLUGINS
+from gui.plugins.plugin_registry import PluginRegistry
 from gui.plugins.simple_request_viewer_plugin import SimpleRequestViewerPlugin
 from gui.widgets.http_messages_tree_view import HttpMessagesTreeView
 from gui.worker import Worker
@@ -16,6 +18,8 @@ class MainWindow(QWidget):
         super().__init__()
         self.worker = Worker()
         self.plugins = SimpleRequestViewerPlugin()
+        self.plugin_registry = PluginRegistry()
+        self.plugin_registry.plugins = PLUGINS
 
         self.setGeometry(300, 300, 750, 750)
         self.setWindowTitle('PyProxy')
@@ -70,7 +74,7 @@ class MainWindow(QWidget):
         hbox.addWidget(self.saveButton)
         hbox.addWidget(self.loadButton)
 
-        self.treeView = HttpMessagesTreeView(self.plugins, self)
+        self.treeView = HttpMessagesTreeView(self.plugin_registry, self)
         self.treeView.selected.connect(self.onMessageSelected)
 
         self.tabs = QTabWidget(self)
@@ -136,9 +140,7 @@ class MainWindow(QWidget):
         super().closeEvent(QCloseEvent)
 
     def onReceived(self, rr: RequestResponse):
-        branch = self.treeView.getBranch(rr)
-        self.plugins.on_request_response(rr.request, rr.response, branch)
-        self.treeView.applyModel()
+        self.treeView.onRequestResponse(rr)
 
     def onError(self, e: Exception):
         self.update_status()
