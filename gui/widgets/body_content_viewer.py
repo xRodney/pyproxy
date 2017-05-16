@@ -28,3 +28,14 @@ class BodyContentViewer(QWidget):
             newWidget = function(self.data, self)
             self.vbox.removeItem(self.vbox.itemAt(self.vbox.count() - 1))
             self.vbox.addWidget(newWidget)
+
+    def saveState(self):
+        return dict(selected=self.combo.currentText())
+
+    def restoreState(self, state):
+        if state and state.get('selected', None) is not None:
+            selected = state['selected']
+            for i in range(self.combo.count()):
+                if self.combo.itemText(i) == selected:
+                    self.combo.setCurrentIndex(i)
+                    break
