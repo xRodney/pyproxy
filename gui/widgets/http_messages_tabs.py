@@ -16,7 +16,8 @@ class HttpMessagesTabs(QTabWidget):
             self.tabs.append((tab, name))
             self.addTab(tab, name)
             if state.get(name, None) is not None:
-                tab.restoreState(state[name])
+                if hasattr(tab, "restoreState"):
+                    tab.restoreState(state[name])
 
         self.setCurrentIndex(selected_tab)
 
