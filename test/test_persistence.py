@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from pipe.persistence import parse_message_pairs, serialize_message_pair
+from pipe.persistence import parse_message_pairs, serialize_message_pairs
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,8 +27,7 @@ def test_load_and_save(data):
     # f.close()
 
     stream2 = io.BytesIO()
-    for pair in message_pairs:
-        serialize_message_pair(pair, stream2)
+    serialize_message_pairs(message_pairs, stream2)
     stream2.seek(0)
     data2 = stream2.read()
     assert data == data2

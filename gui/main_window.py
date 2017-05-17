@@ -1,7 +1,8 @@
 import urllib.request
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QTabWidget, QVBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
+    QFileDialog
 
 from gui.plugins import PLUGINS
 from gui.plugins.plugin_registry import PluginRegistry
@@ -10,7 +11,7 @@ from gui.widgets.http_messages_tree_view import HttpMessagesTreeView
 from gui.worker import Worker
 from parser.http_parser import HttpMessage
 from pipe.communication import RequestResponse
-from pipe.persistence import serialize_message_pair, parse_message_pairs
+from pipe.persistence import parse_message_pairs, serialize_message_pairs
 
 
 class MainWindow(QWidget):
@@ -116,18 +117,30 @@ class MainWindow(QWidget):
             msg.exec_()
 
     def onSaveClicked(self, event):
-        f = open("myfile.dat", "wb")
-        for pair in self.treeView.getAllMessagePairs():
-            serialize_message_pair(pair, f)
-        f.close()
+        file_name = QFileDialog.getSaveFileName(self, 'Save HTTP messages', '.', filter='*.http')[0]
+        if not file_name:
+            return
+
+        if not file_name.endswith(".http"):
+            file_name += ".http"
+
+        self.save(file_name)
+
 
     def onLoadClicked(self, event):
-        self.load("TBD")
+        file_name = QFileDialog.getOpenFileName(self, 'Save HTTP messages', '.', filter='*.http')[0]
+        if file_name:
+            self.load(file_name)
 
-    def load(self, filename):
-        f = open("myfile.dat", "rb")
+    def load(self, file_name):
+        f = open(file_name, "rb")
         for pair in parse_message_pairs(f):
             self.onReceived(pair)
+        f.close()
+
+    def save(self, file_name):
+        f = open(file_name, "wb")
+        serialize_message_pairs(self.treeView.getAllMessagePairs(), f)
         f.close()
 
     def closeEvent(self, QCloseEvent):

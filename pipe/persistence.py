@@ -30,6 +30,11 @@ def serialize_message_pair(rr: RequestResponse, stream: BufferedIOBase):
         stream.write(b"NoResponse\r\n")
 
 
+def serialize_message_pairs(pairs, stream: BufferedIOBase):
+    for pair in pairs:
+        serialize_message_pair(pair, stream)
+
+
 def parse_message_pair(data):
     kw, data = yield from get_word(data)
     assert kw == b"Pair:"
