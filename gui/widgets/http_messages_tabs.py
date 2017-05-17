@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QTabWidget
 
+TAB_CAPTION_PROPERTY = "tab_caption"
 
 class HttpMessagesTabs(QTabWidget):
     def __init__(self, plugin_registry):
         super().__init__()
         self.plugin_registry = plugin_registry
-        self.tabs = []
 
     def onMessageSelected(self, request_response):
         selected_tab = self.currentIndex()
@@ -13,8 +13,8 @@ class HttpMessagesTabs(QTabWidget):
         self.removeAllTabs()
 
         for tab, name in self.plugin_registry.get_tabs(request_response):
-            self.tabs.append((tab, name))
             self.addTab(tab, name)
+            tab.setProperty(TAB_CAPTION_PROPERTY, name)
             if state.get(name, None) is not None:
                 if hasattr(tab, "restoreState"):
                     tab.restoreState(state[name])
@@ -28,7 +28,9 @@ class HttpMessagesTabs(QTabWidget):
 
     def saveState(self):
         state = {}
-        for tab, text in self.tabs:
+        for i in range(self.count()):
+            tab = self.widget(i)
+            text = tab.property(TAB_CAPTION_PROPERTY)
             if hasattr(tab, "saveState"):
                 state[text] = tab.saveState()
         return state
