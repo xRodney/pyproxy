@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox, QLabel, QStackedWidget
 
 from parser.http_parser import HttpMessage
 
 
 class BodyContentViewer(QWidget):
-    def __init__(self, plugin_registry, parent=None):
+    def __init__(self, plugin_registry, message, state, parent=None):
         super().__init__(parent)
         self.plugin_registry = plugin_registry
         vbox = QVBoxLayout()
@@ -14,7 +14,12 @@ class BodyContentViewer(QWidget):
         vbox.itemAt(vbox.count() - 1)
         self.vbox = vbox
         self.setLayout(vbox)
+
+        self.setContent(message)
+        self.restoreState(state)
+
         self.combo.currentIndexChanged.connect(self.onComboChanged)
+        self.onComboChanged()
 
     def setContent(self, data: HttpMessage):
         self.data = data

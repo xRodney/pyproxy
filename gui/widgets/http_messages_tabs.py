@@ -12,12 +12,11 @@ class HttpMessagesTabs(QTabWidget):
         state = self.saveState()
         self.removeAllTabs()
 
-        for tab, name in self.plugin_registry.get_tabs(request_response):
-            self.addTab(tab, name)
+        for tab_fnc, name in self.plugin_registry.get_tabs(request_response):
+            tab_state = state.get(name, None)
+            tab = tab_fnc(tab_state)
             tab.setProperty(TAB_CAPTION_PROPERTY, name)
-            if state.get(name, None) is not None:
-                if hasattr(tab, "restoreState"):
-                    tab.restoreState(state[name])
+            self.addTab(tab, name)
 
         self.setCurrentIndex(selected_tab)
 

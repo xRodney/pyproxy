@@ -28,10 +28,10 @@ class CorePlugin(GridPlugin):
         return msg.first_line().decode().split("\r\n")[0] if msg else "Unmatched"
 
     def get_tabs(self, rr):
-        yield self.__build_headers_tab(rr.request), "Request head"
-        yield self.__build_body_tab(rr.request), "Request body"
-        yield self.__build_headers_tab(rr.response), "Response head"
-        yield self.__build_body_tab(rr.response), "Response body"
+        yield lambda state: self.__build_headers_tab(rr.request, state), "Request head"
+        yield lambda state: self.__build_body_tab(rr.request, state), "Request body"
+        yield lambda state: self.__build_headers_tab(rr.response, state), "Response head"
+        yield lambda state: self.__build_body_tab(rr.response, state), "Response body"
 
     def get_content_representations(self, data: HttpMessage):
         if data.is_text():
@@ -41,19 +41,19 @@ class CorePlugin(GridPlugin):
         yield ("Hex", self.hex_representation)
 
     def text_representation(self, data: HttpMessage, parent_widget):
-        body = QPlainTextEdit(parent_widget)
+        body = QPlainTextEdit()
         body.setReadOnly(True)
         body.setPlainText(data.body_as_text())
         return body
 
     def html_representation(self, data: HttpMessage, parent_widget):
-        body = QTextEdit(parent_widget)
+        body = QTextEdit()
         body.setReadOnly(True)
         body.setHtml(data.body_as_text())
         return body
 
     def hex_representation(self, data: HttpMessage, parent_widget):
-        body = QPlainTextEdit(parent_widget)
+        body = QPlainTextEdit()
         font = QFont("Courier")
         font.setStyleHint(QFont.Monospace)
         body.setFont(font)
@@ -62,7 +62,7 @@ class CorePlugin(GridPlugin):
         body.setReadOnly(True)
         return body
 
-    def __build_headers_tab(self, message: HttpMessage):
+    def __build_headers_tab(self, message: HttpMessage, state):
         headers = QTextEdit()
         if message:
             headers_list = (name.decode() + ": " + value.decode() for name, value in message.headers.items())
@@ -70,10 +70,9 @@ class CorePlugin(GridPlugin):
         headers.setReadOnly(True)
         return headers
 
-    def __build_body_tab(self, message: HttpMessage):
+    def __build_body_tab(self, message: HttpMessage, state):
         if message and message.has_body():
-            body = BodyContentViewer(self.plugin_registry)
-            body.setContent(message)
+            body = BodyContentViewer(self.plugin_registry, message, state)
         else:
             body = QLabel("No body")
         return body
