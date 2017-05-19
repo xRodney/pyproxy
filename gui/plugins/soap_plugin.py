@@ -1,12 +1,15 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit
 
-from gui.plugins.plugin_registry import GridPlugin
+from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin
 from parser.http_parser import HttpMessage
 from utils import soap2python
 
 
-class SoapPlugin(GridPlugin):
+class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin):
+    def __init__(self):
+        super().__init__("Soap plugin")
+
     def get_columns(self):
         return (
             ("soap_method", "SOAP method"),

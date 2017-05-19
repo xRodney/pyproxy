@@ -2,14 +2,14 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QLabel
 from hexdump import hexdump
 
-from gui.plugins.plugin_registry import GridPlugin
+from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
 from gui.widgets.body_content_viewer import BodyContentViewer
 from parser.http_parser import HttpMessage
 
 
-class CorePlugin(GridPlugin):
+class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
     def __init__(self):
-        self.plugin_registry = None
+        super().__init__("Core functionality")
 
     def get_columns(self):
         return (
