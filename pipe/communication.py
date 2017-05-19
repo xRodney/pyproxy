@@ -30,11 +30,11 @@ class RequestResponse:
 
 
 class MessageProcessor:
-    def __init__(self, local_address, local_port, remote_address, remote_port):
-        self.remote_port = remote_port
-        self.remote_address = remote_address
-        self.local_port = local_port
-        self.local_address = local_address
+    def __init__(self, proxy_parameters):
+        self.remote_port = proxy_parameters.remote_port
+        self.remote_address = proxy_parameters.remote_address
+        self.local_port = proxy_parameters.local_port
+        self.local_address = proxy_parameters.local_address
 
     def __get_address(self, address, port=None):
         if port:

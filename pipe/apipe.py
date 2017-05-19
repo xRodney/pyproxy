@@ -16,6 +16,14 @@ BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
 
 
+class ProxyParameters():
+    def __init__(self, local_address, local_port, remote_address, remote_port):
+        self.local_address = local_address
+        self.local_port = local_port
+        self.remote_address = remote_address
+        self.remote_port = remote_port
+
+
 def create_logger():
     logger = logging.getLogger('proxy')
     logger.setLevel(logging.INFO)
@@ -63,18 +71,18 @@ async def proxy_data(reader, writer, connection_string, pairer, processor):
             if not data:
                 break
     except Exception as e:
-        logger.info('proxy_{}_task exception {}'.format(tag, e))
+        logger.info('proxy_task exception {}'.format(e))
     finally:
         writer.close()
         logger.info('close connection {}'.format(connection_string))
 
 
-async def accept_client(client_reader, client_writer, local_address, local_port, remote_address, remote_port, listener):
+async def accept_client(client_reader, client_writer, proxy_parameters, listener):
     client_string = client_connection_string(client_writer)
     logger.info('accept connection {}'.format(client_string))
     try:
         (remote_reader, remote_writer) = await asyncio.wait_for(
-            asyncio.open_connection(host=remote_address, port=remote_port),
+            asyncio.open_connection(host=proxy_parameters.remote_address, port=proxy_parameters.remote_port),
             timeout=CONNECT_TIMEOUT_SECONDS)
     except asyncio.TimeoutError:
         logger.info('connect timeout')
@@ -89,7 +97,7 @@ async def accept_client(client_reader, client_writer, local_address, local_port,
         logger.info('connected to remote {}'.format(remote_string))
 
         pairer = MessagePairer(listener)
-        processor = MessageProcessor(local_address, local_port, remote_address, remote_port)
+        processor = MessageProcessor(proxy_parameters)
 
         asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, pairer, processor))
         asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, pairer, processor))
@@ -107,18 +115,17 @@ def print_usage_and_exit():
     sys.exit(1)
 
 
-async def prepare_server(local_address, local_port, remote_address, remote_port, listener=None):
+async def prepare_server(proxy_parameters, listener=None):
     def handle_client(client_reader, client_writer):
         asyncio.ensure_future(accept_client(
             client_reader=client_reader, client_writer=client_writer,
-            remote_address=remote_address, remote_port=remote_port,
-            local_address=local_address, local_port=local_port,
+            proxy_parameters=proxy_parameters,
             listener=listener
         ))
 
     try:
         server = await asyncio.start_server(
-            handle_client, host=local_address, port=local_port)
+            handle_client, host=proxy_parameters.local_address, port=proxy_parameters.local_port)
     except Exception as e:
         logger.error('Bind error: {}'.format(e))
         raise
@@ -145,9 +152,9 @@ class PipeThread(Thread):
         except KeyboardInterrupt:
             pass
 
-    def start_proxy(self, local_address, local_port, remote_address, remote_port):
+    def start_proxy(self, proxy_parameters):
         future = asyncio.run_coroutine_threadsafe(
-            self.__start_proxy(local_address, local_port, remote_address, remote_port),
+            self.__start_proxy(proxy_parameters),
             self.loop)
         ex = future.exception()
         if ex:
@@ -155,11 +162,9 @@ class PipeThread(Thread):
         else:
             self.__is_running = True
 
-    async def __start_proxy(self, local_address, local_port, remote_address, remote_port):
+    async def __start_proxy(self, proxy_parameters):
         assert threading.current_thread() is self
-        self.server = await prepare_server(local_address, local_port,
-                                           remote_address, remote_port,
-                                           self.listener)
+        self.server = await prepare_server(proxy_parameters, self.listener)
         assert self.server is not None
 
     def stop_proxy(self):
@@ -183,12 +188,13 @@ if __name__ == '__main__':
             raise Exception("arguments")
         (local_address, local_port) = parse_addr_port_string(sys.argv[1])
         (remote_address, remote_port) = parse_addr_port_string(sys.argv[2])
+        proxy_parameters = ProxyParameters(local_address, local_port, remote_address, remote_port)
     except:
         print_usage_and_exit()
     else:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            prepare_server(local_address, local_port, remote_address, remote_port, MessageListener()))
+            prepare_server(proxy_parameters, MessageListener()))
         try:
             loop.run_forever()
         except KeyboardInterrupt:
