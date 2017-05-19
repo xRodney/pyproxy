@@ -1,9 +1,10 @@
+import sys
 import traceback
 import urllib.request
 
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
-    QFileDialog
+    QFileDialog, QAction, QMenuBar
 
 from gui.plugins import PLUGINS
 from gui.plugins.plugin_registry import PluginRegistry
@@ -45,15 +46,11 @@ class MainWindow(QWidget):
         self.stopButton = QPushButton("Stop")
         self.restartButton = QPushButton("Restart")
         self.requestButton = QPushButton("Request")
-        self.saveButton = QPushButton("Save")
-        self.loadButton = QPushButton("Load")
 
         self.startButton.clicked.connect(self.onStartClicked)
         self.stopButton.clicked.connect(self.onStopClicked)
         self.restartButton.clicked.connect(self.onRestartClicked)
         self.requestButton.clicked.connect(self.onRequestClicked)
-        self.saveButton.clicked.connect(self.onSaveClicked)
-        self.loadButton.clicked.connect(self.onLoadClicked)
         self.worker.received.connect(self.onReceived)
         self.worker.error.connect(self.onError)
         self.worker.running_changed.connect(self.update_status)
@@ -63,8 +60,6 @@ class MainWindow(QWidget):
         hbox.addWidget(self.stopButton)
         hbox.addWidget(self.restartButton)
         hbox.addWidget(self.requestButton)
-        hbox.addWidget(self.saveButton)
-        hbox.addWidget(self.loadButton)
 
         self.treeView = HttpMessagesTreeView(self.plugin_registry, self)
         self.treeView.selected.connect(self.onMessageSelected)
@@ -78,9 +73,36 @@ class MainWindow(QWidget):
         vbox.addWidget(self.tabs)
 
         self.setLayout(vbox)
+        vbox.setMenuBar(self.createMenu())
         self.show()
 
         self.update_status(self.worker.status())
+
+    def createMenu(self):
+        mainMenu = QMenuBar()
+        fileMenu = mainMenu.addMenu('&File')
+
+        openAction = QAction('&Open', self)
+        openAction.triggered.connect(self.onLoadClicked)
+        fileMenu.addAction(openAction)
+
+        saveAction = QAction('&Save', self)
+        saveAction.triggered.connect(self.onSaveClicked)
+        fileMenu.addAction(saveAction)
+
+        fileMenu.addSeparator()
+
+        exitAction = QAction('&Exit', self)
+        exitAction.triggered.connect(self.onExit)
+        fileMenu.addAction(exitAction)
+
+        settignsMenu = mainMenu.addMenu('&Settings')
+        for label, callback in self.plugin_registry.add_settings_menu():
+            action = QAction(label, self)
+            action.triggered.connect(callback)
+            settignsMenu.addAction(action)
+
+        return mainMenu
 
     def onStartClicked(self, event):
         self.worker.start()
@@ -114,7 +136,6 @@ class MainWindow(QWidget):
             file_name += ".http"
 
         self.save(file_name)
-
 
     def onLoadClicked(self, event):
         file_name = QFileDialog.getOpenFileName(self, 'Save HTTP messages', '.', filter='*.http')[0]
@@ -159,3 +180,6 @@ class MainWindow(QWidget):
         self.stopButton.setDisabled(not status)
         self.restartButton.setDisabled(not status)
         # self.requestButton.setDisabled(not status)
+
+    def onExit(self, event):
+        sys.exit()

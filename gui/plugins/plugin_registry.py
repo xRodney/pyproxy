@@ -1,9 +1,9 @@
-from gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin
+from gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin
 from parser.http_parser import HttpMessage
 from pipe.communication import RequestResponse
 
 
-class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin):
+class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin):
     def __init__(self):
         self.__plugins = []
 
@@ -45,3 +45,8 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin):
         for plugin in self.__plugins:
             if isinstance(plugin, TabPlugin):
                 yield from plugin.get_tabs(data)
+
+    def add_settings_menu(self):
+        for plugin in self.__plugins:
+            if isinstance(plugin, SettingsPlugin):
+                yield from plugin.add_settings_menu()

@@ -28,3 +28,9 @@ class TabPlugin(metaclass=ABCMeta):
     @abstractmethod
     def get_tabs(self, data):
         pass
+
+
+class SettingsPlugin(metaclass=ABCMeta):
+    @abstractmethod
+    def add_settings_menu(self):
+        pass

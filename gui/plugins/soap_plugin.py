@@ -1,12 +1,12 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit
 
-from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin
+from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin
 from parser.http_parser import HttpMessage
 from utils import soap2python
 
 
-class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin):
+class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
     def __init__(self):
         super().__init__("Soap plugin")
 
@@ -54,3 +54,9 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin):
     def __get_element(self, request):
         element = soap2python.parse_soap_from_string(request.body_as_text())
         return element
+
+    def add_settings_menu(self):
+        yield "Soap plugin...", self.on_settings_clicked
+
+    def on_settings_clicked(self):
+        pass
