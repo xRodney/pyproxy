@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QPlainTextEdit
+from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox
 
 from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin
 from parser.http_parser import HttpMessage
@@ -59,4 +59,15 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
         yield "Soap plugin...", self.on_settings_clicked
 
     def on_settings_clicked(self):
-        pass
+        d = QDialog()
+        d.setWindowTitle("Soap plugin settings")
+
+        layout = QFormLayout()
+        excludeEdit = QLineEdit()
+        excludeNonSoap = QCheckBox()
+        layout.addRow(QLabel("Exclude these SOAP messages"), excludeEdit)
+        layout.addRow(QLabel("Exclude non-SOAP traffic"), excludeNonSoap)
+
+        d.setLayout(layout)
+
+        d.exec_()
