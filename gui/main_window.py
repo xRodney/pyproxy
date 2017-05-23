@@ -3,6 +3,7 @@ import traceback
 import urllib.request
 
 from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
     QFileDialog, QAction, QMenuBar
 
@@ -43,10 +44,10 @@ class MainWindow(QWidget):
         self.connection_config.changed.connect(self.worker.setParameters)
         self.connection_config.restoreSettings(self.settings)
 
-        self.startButton = QPushButton("Start")
-        self.stopButton = QPushButton("Stop")
-        self.restartButton = QPushButton("Restart")
-        self.requestButton = QPushButton("Request")
+        self.startButton = QPushButton(QIcon.fromTheme("media-record"), "Start")
+        self.stopButton = QPushButton(QIcon.fromTheme("media-playback-stop"), "Stop")
+        self.restartButton = QPushButton(QIcon.fromTheme("media-skip-backward"), "Restart")
+        self.requestButton = QPushButton(QIcon.fromTheme("media-playback-start"), "Request")
 
         self.startButton.clicked.connect(self.onStartClicked)
         self.stopButton.clicked.connect(self.onStopClicked)
@@ -57,6 +58,7 @@ class MainWindow(QWidget):
         self.worker.running_changed.connect(self.update_status)
 
         hbox = QHBoxLayout()
+        hbox.addWidget(self.connection_config)
         hbox.addWidget(self.startButton)
         hbox.addWidget(self.stopButton)
         hbox.addWidget(self.restartButton)
@@ -68,7 +70,6 @@ class MainWindow(QWidget):
         self.tabs = HttpMessagesTabs(self.plugin_registry)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self.connection_config)
         vbox.addLayout(hbox)
         vbox.addWidget(self.treeView)
         vbox.addWidget(self.tabs)
