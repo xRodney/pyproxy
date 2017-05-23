@@ -39,16 +39,22 @@ class ConnectionConfig(QWidget):
         self.setLayout(configLayout)
 
     def onLocalPortChanged(self, text):
-        self.parameters.local_port = int(text)
-        self.changed.emit(self.parameters)
+        try:
+            self.parameters.local_port = int(text)
+            self.changed.emit(self.parameters)
+        except ValueError:
+            pass
 
     def onLocalAddressChanged(self, text):
         self.parameters.local_address = text
         self.changed.emit(self.parameters)
 
     def onRemotePortChanged(self, text):
-        self.parameters.remote_port = int(text)
-        self.changed.emit(self.parameters)
+        try:
+            self.parameters.remote_port = int(text)
+            self.changed.emit(self.parameters)
+        except ValueError:
+            pass
 
     def onRemoteAddressChanged(self, text):
         self.parameters.remote_address = text
