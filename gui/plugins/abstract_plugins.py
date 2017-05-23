@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+from pipe.communication import RequestResponse
+
 
 class Plugin:
     def __init__(self, name, id=None):
@@ -9,13 +11,14 @@ class Plugin:
 
 
 class GridPlugin(metaclass=ABCMeta):
-    @abstractmethod
     def get_columns(self):
-        pass
+        return ()
 
-    @abstractmethod
     def get_cell_content(self, data, column_id, value):
-        pass
+        return None
+
+    def filter_accepts_row(self, data: RequestResponse):
+        return True
 
 
 class ContentViewPlugin(metaclass=ABCMeta):
@@ -33,4 +36,10 @@ class TabPlugin(metaclass=ABCMeta):
 class SettingsPlugin(metaclass=ABCMeta):
     @abstractmethod
     def add_settings_menu(self):
+        pass
+
+    def save_settings(self, settings):
+        pass
+
+    def restore_settings(self, settings):
         pass

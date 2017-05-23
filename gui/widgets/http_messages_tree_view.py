@@ -8,10 +8,14 @@ ROLE_HTTP_MESSAGE = 45454
 
 
 class FilteredModel(QSortFilterProxyModel):
+    def __init__(self, plugin_registry):
+        super().__init__()
+        self.plugin_registry = plugin_registry
+
     def filterAcceptsRow(self, source_row, source_parent):
-        index = self.sourceModel().index(source_row, 2, source_parent)
-        data = self.sourceModel().data(index)
-        return True
+        index = self.sourceModel().index(source_row, 0, source_parent)
+        data = self.sourceModel().data(index, ROLE_HTTP_MESSAGE)
+        return self.plugin_registry.filter_accepts_row(data)
 
 
 class HttpMessagesTreeView(QTreeView):
@@ -34,12 +38,15 @@ class HttpMessagesTreeView(QTreeView):
 
     def clear(self):
         self.model = QStandardItemModel()
-        self.filteredModel = FilteredModel()
+        self.filteredModel = FilteredModel(self.plugin_registry)
         self.filteredModel.setSourceModel(self.model)
 
         self.rootNode = self.model.invisibleRootItem()
         self.__index = OrderedDict()
         self.setModel(self.filteredModel)
+
+    def refresh(self):
+        self.filteredModel.invalidateFilter()
 
     def applyModel(self):
         self.setModel(self.filteredModel)

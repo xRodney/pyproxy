@@ -36,6 +36,14 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin):
                     result = content
         return result
 
+    def filter_accepts_row(self, data: RequestResponse):
+        for plugin in self.__plugins:
+            if isinstance(plugin, GridPlugin):
+                if not plugin.filter_accepts_row(data):
+                    return False
+        return True
+
+
     def get_content_representations(self, data: HttpMessage):
         for plugin in self.__plugins:
             if isinstance(plugin, ContentViewPlugin):
@@ -50,3 +58,13 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin):
         for plugin in self.__plugins:
             if isinstance(plugin, SettingsPlugin):
                 yield from plugin.add_settings_menu()
+
+    def save_settings(self, settings):
+        for plugin in self.__plugins:
+            if isinstance(plugin, SettingsPlugin):
+                plugin.save_settings(settings)
+
+    def restore_settings(self, settings):
+        for plugin in self.__plugins:
+            if isinstance(plugin, SettingsPlugin):
+                plugin.restore_settings(settings)

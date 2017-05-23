@@ -34,6 +34,7 @@ class MainWindow(QWidget):
         self.settings = QSettings("MyCompany", "MyApp")
         if self.settings.value("geometry", None):
             self.restoreGeometry(self.settings.value("geometry"))
+        self.plugin_registry.restore_settings(self.settings)
 
         self.initUI()
 
@@ -99,10 +100,17 @@ class MainWindow(QWidget):
         settignsMenu = mainMenu.addMenu('&Settings')
         for label, callback in self.plugin_registry.add_settings_menu():
             action = QAction(label, self)
-            action.triggered.connect(callback)
+            action.triggered.connect(self.getSettingsCallback(callback))
             settignsMenu.addAction(action)
 
         return mainMenu
+
+    def getSettingsCallback(self, callback):
+        def func():
+            callback()
+            self.treeView.refresh()
+
+        return func
 
     def onStartClicked(self, event):
         self.worker.start()
@@ -159,6 +167,7 @@ class MainWindow(QWidget):
 
         self.settings.setValue("geometry", self.saveGeometry())
         self.connection_config.saveSettings(self.settings)
+        self.plugin_registry.save_settings(self.settings)
         super().closeEvent(QCloseEvent)
 
     def onReceived(self, rr: RequestResponse):
