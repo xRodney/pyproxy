@@ -21,8 +21,14 @@ class ConnectionConfig(QWidget):
         remotePortEdit.textChanged.connect(self.onRemotePortChanged)
 
         localPortEdit.setText(str(self.parameters.local_port))
+        localPortEdit.setToolTip("Local port")
+        localPortEdit.setPlaceholderText("e.g. 8888")
         remoteHostEdit.setText(self.parameters.remote_address)
+        remoteHostEdit.setToolTip("Remote host")
+        remoteHostEdit.setPlaceholderText("e.g. www.google.com")
         remotePortEdit.setText(str(self.parameters.remote_port))
+        remotePortEdit.setToolTip("Remote port")
+        remotePortEdit.setPlaceholderText("e.g. 80")
 
         configLayout = QHBoxLayout()
         configLayout.addWidget(localPortEdit)
