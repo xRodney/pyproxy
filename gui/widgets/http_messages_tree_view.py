@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QSortFilterProxyModel
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QTreeView
+from PyQt5.QtWidgets import QTreeView, QWidget, QVBoxLayout, QLabel
 
 ROLE_HTTP_MESSAGE = 45454
 
@@ -18,7 +18,7 @@ class FilteredModel(QSortFilterProxyModel):
         return self.plugin_registry.filter_accepts_row(data)
 
 
-class HttpMessagesTreeView(QTreeView):
+class HttpMessagesTreeView(QWidget):
     selected = pyqtSignal(object)
 
     class ModelItem:
@@ -29,9 +29,18 @@ class HttpMessagesTreeView(QTreeView):
     def __init__(self, plugin_registry, parent=None):
         super().__init__(parent)
         self.plugin_registry = plugin_registry
+        self.tree_view = QTreeView()
         self.clear()
-        self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
+        self.label = QLabel(self.__getLabelText())
+
+        self.tree_view.selectionModel().selectionChanged.connect(self.onSelectionChanged)
         self.column_definitions = self.plugin_registry.get_columns()
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(self.tree_view)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
 
     def getAllMessagePairs(self):
         return (item.model for item in self.__index.values())
@@ -43,19 +52,21 @@ class HttpMessagesTreeView(QTreeView):
 
         self.rootNode = self.model.invisibleRootItem()
         self.__index = OrderedDict()
-        self.setModel(self.filteredModel)
+        self.tree_view.setModel(self.filteredModel)
 
     def refresh(self):
         self.filteredModel.invalidateFilter()
+        self.label.setText(self.__getLabelText())
 
     def applyModel(self):
-        self.setModel(self.filteredModel)
+        self.tree_view.setModel(self.filteredModel)
         for i, column in enumerate(self.column_definitions):
             self.model.setHeaderData(i, Qt.Horizontal, column[1]);
         column_count = self.model.columnCount()
-        column_width = self.width() / column_count
+        column_width = self.tree_view.width() / column_count
         for col in range(0, column_count):
-            self.setColumnWidth(col, column_width)
+            self.tree_view.setColumnWidth(col, column_width)
+        self.label.setText(self.__getLabelText())
 
     def onSelectionChanged(self, selection: QItemSelection):
         if selection.isEmpty():
@@ -86,3 +97,7 @@ class HttpMessagesTreeView(QTreeView):
         if new_row:
             self.rootNode.appendRow(branch)
         self.applyModel()
+
+    def __getLabelText(self):
+        return "Displaying <b>{}</b> out of <b>{}</b>.".format(self.filteredModel.rowCount(),
+                                                               self.model.rowCount())
