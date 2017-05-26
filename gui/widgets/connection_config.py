@@ -10,30 +10,27 @@ class ConnectionConfig(QWidget):
     def __init__(self, parameters: ProxyParameters, parent=None):
         super().__init__(parent)
 
-        self.parameters = parameters
+        self.localPortEdit = QLineEdit()
+        self.remoteHostEdit = QLineEdit()
+        self.remotePortEdit = QLineEdit()
 
-        localPortEdit = QLineEdit()
-        remoteHostEdit = QLineEdit()
-        remotePortEdit = QLineEdit()
+        self.localPortEdit.textChanged.connect(self.onLocalPortChanged)
+        self.remoteHostEdit.textChanged.connect(self.onRemoteAddressChanged)
+        self.remotePortEdit.textChanged.connect(self.onRemotePortChanged)
 
-        localPortEdit.textChanged.connect(self.onLocalPortChanged)
-        remoteHostEdit.textChanged.connect(self.onRemoteAddressChanged)
-        remotePortEdit.textChanged.connect(self.onRemotePortChanged)
+        self.localPortEdit.setToolTip("Local port")
+        self.localPortEdit.setPlaceholderText("e.g. 8888")
+        self.remoteHostEdit.setToolTip("Remote host")
+        self.remoteHostEdit.setPlaceholderText("e.g. www.google.com")
+        self.remotePortEdit.setToolTip("Remote port")
+        self.remotePortEdit.setPlaceholderText("e.g. 80")
 
-        localPortEdit.setText(str(self.parameters.local_port))
-        localPortEdit.setToolTip("Local port")
-        localPortEdit.setPlaceholderText("e.g. 8888")
-        remoteHostEdit.setText(self.parameters.remote_address)
-        remoteHostEdit.setToolTip("Remote host")
-        remoteHostEdit.setPlaceholderText("e.g. www.google.com")
-        remotePortEdit.setText(str(self.parameters.remote_port))
-        remotePortEdit.setToolTip("Remote port")
-        remotePortEdit.setPlaceholderText("e.g. 80")
+        self.setParameters(parameters)
 
         configLayout = QHBoxLayout()
-        configLayout.addWidget(localPortEdit)
-        configLayout.addWidget(remoteHostEdit)
-        configLayout.addWidget(remotePortEdit)
+        configLayout.addWidget(self.localPortEdit)
+        configLayout.addWidget(self.remoteHostEdit)
+        configLayout.addWidget(self.remotePortEdit)
 
         configLayout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(configLayout)
@@ -73,4 +70,11 @@ class ConnectionConfig(QWidget):
         if settings.value("remote_host", None):
             self.parameters.remote_address = settings.value("remote_host")
 
+        self.setParameters(self.parameters)
         self.changed.emit(self.parameters)
+
+    def setParameters(self, parameters):
+        self.parameters = parameters
+        self.localPortEdit.setText(str(self.parameters.local_port))
+        self.remoteHostEdit.setText(self.parameters.remote_address)
+        self.remotePortEdit.setText(str(self.parameters.remote_port))
