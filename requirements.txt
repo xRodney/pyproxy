@@ -1,2 +1,3 @@
 pytest==2.9.1
 hexdump==3.3
+PyQt5==5.8.1
