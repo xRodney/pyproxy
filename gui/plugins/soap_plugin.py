@@ -1,4 +1,6 @@
-from PyQt5.QtCore import Qt
+from collections import OrderedDict
+
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, \
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
@@ -14,7 +16,7 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
         super().__init__("Soap plugin")
         self.filter_non_soap_traffic = True
         self.filter_methods = []
-        self.clients_for_paths = {}
+        self.clients_for_paths = OrderedDict()
 
     @property
     def filter_methods_as_string(self):
@@ -100,18 +102,35 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
             self.clients_for_paths = d.client_list.getData()
 
     def save_settings(self, settings):
+        settings.beginGroup("soap_plugin")
         settings.setValue("filter_non_soap_traffic", self.filter_non_soap_traffic)
         settings.setValue("filter_methods", self.filter_methods_as_string)
-        settings.setValue("clients_for_paths", self.clients_for_paths)
 
-    def restore_settings(self, settings):
+        settings.beginWriteArray("clients_for_paths")
+        i = 0
+        for path, client in self.clients_for_paths.items():
+            settings.setArrayIndex(i)
+            i += 1
+            settings.setValue("path", path)
+            settings.setValue("client", client)
+        settings.endArray()
+        settings.endGroup()
+
+    def restore_settings(self, settings: QSettings):
+        settings.beginGroup("soap_plugin")
         if settings.value("filter_non_soap_traffic", None):
             self.filter_non_soap_traffic = bool(settings.value("filter_non_soap_traffic"))
         if settings.value("filter_methods", None):
             self.filter_methods_as_string = settings.value("filter_methods")
-        if settings.value("clients_for_paths", None):
-            value = settings.value("clients_for_paths")
-            self.clients_for_paths = value
+
+        size = settings.beginReadArray("clients_for_paths")
+        for i in range(size):
+            settings.setArrayIndex(i)
+            path = settings.value("path")
+            client = settings.value("client")
+            self.clients_for_paths[path] = client
+        settings.endArray()
+        settings.endGroup()
 
     class SettingsDialog(QDialog):
         def __init__(self, plugin):

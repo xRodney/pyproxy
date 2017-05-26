@@ -32,9 +32,13 @@ class MainWindow(QWidget):
 
         self.worker = Worker(self.parameters)
 
-        self.settings = QSettings("MyCompany", "MyApp")
+        self.settings = QSettings("settings.ini", QSettings.IniFormat)
+
+        self.settings.beginGroup("window")
         if self.settings.value("geometry", None):
             self.restoreGeometry(self.settings.value("geometry"))
+        self.settings.endGroup()
+
         self.plugin_registry.restore_settings(self.settings)
 
         self.initUI()
@@ -166,7 +170,10 @@ class MainWindow(QWidget):
         if self.worker.status():
             self.worker.stop()
 
+        self.settings.beginGroup("window")
         self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.endGroup()
+
         self.connection_config.saveSettings(self.settings)
         self.plugin_registry.save_settings(self.settings)
         super().closeEvent(QCloseEvent)
