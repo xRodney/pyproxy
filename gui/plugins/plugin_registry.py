@@ -6,6 +6,7 @@ from pipe.communication import RequestResponse
 class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin):
     def __init__(self):
         self.__plugins = []
+        self.parameters = None
 
     @property
     def plugins(self):

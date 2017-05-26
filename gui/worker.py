@@ -10,10 +10,10 @@ class Worker(QObject, MessageListener):
     error = pyqtSignal(Exception)
     running_changed = pyqtSignal(bool)
 
-    def __init__(self, parameters, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.thread = apipe.PipeThread(self)
-        self.parameters = parameters
+        self.parameters = None
 
     def start(self):
         if not self.thread.is_alive():

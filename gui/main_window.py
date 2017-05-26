@@ -1,6 +1,4 @@
 import sys
-import traceback
-import urllib.request
 
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIcon
@@ -18,6 +16,8 @@ from pipe.apipe import ProxyParameters
 from pipe.communication import RequestResponse
 from pipe.persistence import parse_message_pairs, serialize_message_pairs
 
+DEFAULT_PARAMETERS = ProxyParameters("localhost", 8888, "www.httpwatch.com", 80)
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -28,9 +28,7 @@ class MainWindow(QWidget):
         self.setGeometry(300, 300, 750, 750)
         self.setWindowTitle('PyProxy')
 
-        self.parameters = ProxyParameters("localhost", 8888, "www.httpwatch.com", 80)
-
-        self.worker = Worker(self.parameters)
+        self.worker = Worker()
 
         self.settings = QSettings("settings.ini", QSettings.IniFormat)
 
@@ -44,19 +42,18 @@ class MainWindow(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.connection_config = ConnectionConfig(self.parameters, self)
+        self.connection_config = ConnectionConfig(self)
         self.connection_config.changed.connect(self.worker.setParameters)
-        self.connection_config.restoreSettings(self.settings)
+        self.connection_config.changed.connect(self.setParameters)
+        self.connection_config.restoreSettings(self.settings, DEFAULT_PARAMETERS)
 
-        self.startButton = QPushButton(QIcon.fromTheme("media-record"), "Start")
+        self.startButton = QPushButton(QIcon.fromTheme("media-playback-start"), "Start")
         self.stopButton = QPushButton(QIcon.fromTheme("media-playback-stop"), "Stop")
         self.restartButton = QPushButton(QIcon.fromTheme("media-skip-backward"), "Restart")
-        self.requestButton = QPushButton(QIcon.fromTheme("media-playback-start"), "Request")
 
         self.startButton.clicked.connect(self.onStartClicked)
         self.stopButton.clicked.connect(self.onStopClicked)
         self.restartButton.clicked.connect(self.onRestartClicked)
-        self.requestButton.clicked.connect(self.onRequestClicked)
         self.worker.received.connect(self.onReceived)
         self.worker.error.connect(self.onError)
         self.worker.running_changed.connect(self.update_status)
@@ -66,7 +63,6 @@ class MainWindow(QWidget):
         hbox.addWidget(self.startButton)
         hbox.addWidget(self.stopButton)
         hbox.addWidget(self.restartButton)
-        hbox.addWidget(self.requestButton)
 
         self.treeView = HttpMessagesTreeView(self.plugin_registry, self)
         self.treeView.selected.connect(self.onMessageSelected)
@@ -128,18 +124,6 @@ class MainWindow(QWidget):
         self.treeView.clear()
         self.worker.start()
 
-    def onRequestClicked(self):
-        try:
-            urllib.request.urlopen("http://{}:{}".format(self.parameters.local_address, self.parameters.local_port))
-        except Exception as e:
-            print(traceback.format_exc())
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setText("The request resulted in an error:")
-            msg.setInformativeText(str(e))
-            msg.setWindowTitle("Error")
-            msg.exec_()
-
     def onSaveClicked(self, event):
         file_name = QFileDialog.getSaveFileName(self, 'Save HTTP messages', '.', filter='*.http')[0]
         if not file_name:
@@ -197,6 +181,9 @@ class MainWindow(QWidget):
         self.stopButton.setDisabled(not status)
         self.restartButton.setDisabled(not status)
         # self.requestButton.setDisabled(not status)
+
+    def setParameters(self, parameters):
+        self.plugin_registry.parameters = parameters
 
     def onExit(self, event):
         sys.exit()

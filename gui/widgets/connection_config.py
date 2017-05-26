@@ -7,7 +7,7 @@ from pipe.apipe import ProxyParameters
 class ConnectionConfig(QWidget):
     changed = pyqtSignal(ProxyParameters)
 
-    def __init__(self, parameters: ProxyParameters, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.localPortEdit = QLineEdit()
@@ -24,8 +24,6 @@ class ConnectionConfig(QWidget):
         self.remoteHostEdit.setPlaceholderText("e.g. www.google.com")
         self.remotePortEdit.setToolTip("Remote port")
         self.remotePortEdit.setPlaceholderText("e.g. 80")
-
-        self.setParameters(parameters)
 
         configLayout = QHBoxLayout()
         configLayout.addWidget(self.localPortEdit)
@@ -62,7 +60,8 @@ class ConnectionConfig(QWidget):
         settings.setValue("remote_port", self.parameters.remote_port)
         settings.setValue("remote_host", self.parameters.remote_address)
 
-    def restoreSettings(self, settings: QSettings):
+    def restoreSettings(self, settings: QSettings, defaultParameters):
+        self.parameters = defaultParameters
         if settings.value("local_port", None):
             self.parameters.local_port = int(settings.value("local_port"))
         if settings.value("remote_port", None):
