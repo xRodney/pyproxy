@@ -30,10 +30,9 @@ class HttpMessagesTreeView(QWidget):
         super().__init__(parent)
         self.plugin_registry = plugin_registry
         self.tree_view = QTreeView()
+        self.label = QLabel()
         self.clear()
-        self.label = QLabel(self.__getLabelText())
 
-        self.tree_view.selectionModel().selectionChanged.connect(self.onSelectionChanged)
         self.column_definitions = self.plugin_registry.get_columns()
 
         layout = QVBoxLayout()
@@ -53,6 +52,9 @@ class HttpMessagesTreeView(QWidget):
         self.rootNode = self.model.invisibleRootItem()
         self.__index = OrderedDict()
         self.tree_view.setModel(self.filteredModel)
+        self.label.setText(self.__getLabelText())
+
+        self.tree_view.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 
     def refresh(self):
         self.filteredModel.invalidateFilter()
