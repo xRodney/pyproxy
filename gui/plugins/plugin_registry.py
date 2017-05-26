@@ -43,11 +43,10 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsPlugin):
                     return False
         return True
 
-
-    def get_content_representations(self, data: HttpMessage):
+    def get_content_representations(self, data: HttpMessage, context: RequestResponse):
         for plugin in self.__plugins:
             if isinstance(plugin, ContentViewPlugin):
-                yield from plugin.get_content_representations(data)
+                yield from plugin.get_content_representations(data, context)
 
     def get_tabs(self, data: RequestResponse):
         for plugin in self.__plugins:

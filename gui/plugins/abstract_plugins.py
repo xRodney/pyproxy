@@ -23,7 +23,7 @@ class GridPlugin(metaclass=ABCMeta):
 
 class ContentViewPlugin(metaclass=ABCMeta):
     @abstractmethod
-    def get_content_representations(self, data):
+    def get_content_representations(self, data, context: RequestResponse):
         pass
 
 

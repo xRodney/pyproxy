@@ -5,6 +5,7 @@ from hexdump import hexdump
 from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
 from gui.widgets.body_content_viewer import BodyContentViewer
 from parser.http_parser import HttpMessage
+from pipe.communication import RequestResponse
 
 
 class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
@@ -29,30 +30,30 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
 
     def get_tabs(self, rr):
         yield lambda state: self.__build_headers_tab(rr.request, state), "Request head"
-        yield lambda state: self.__build_body_tab(rr.request, state), "Request body"
+        yield lambda state: self.__build_body_tab(rr.request, rr, state), "Request body"
         yield lambda state: self.__build_headers_tab(rr.response, state), "Response head"
-        yield lambda state: self.__build_body_tab(rr.response, state), "Response body"
+        yield lambda state: self.__build_body_tab(rr.response, rr, state), "Response body"
 
-    def get_content_representations(self, data: HttpMessage):
+    def get_content_representations(self, data: HttpMessage, context: RequestResponse):
         if data.is_text():
             yield ("Text", self.text_representation)
         if b"text/html" in data.get_content_type():
             yield ("HTML", self.html_representation)
         yield ("Hex", self.hex_representation)
 
-    def text_representation(self, data: HttpMessage, parent_widget):
+    def text_representation(self, data: HttpMessage, context, parent_widget):
         body = QPlainTextEdit()
         body.setReadOnly(True)
         body.setPlainText(data.body_as_text())
         return body
 
-    def html_representation(self, data: HttpMessage, parent_widget):
+    def html_representation(self, data: HttpMessage, context, parent_widget):
         body = QTextEdit()
         body.setReadOnly(True)
         body.setHtml(data.body_as_text())
         return body
 
-    def hex_representation(self, data: HttpMessage, parent_widget):
+    def hex_representation(self, data: HttpMessage, context, parent_widget):
         body = QPlainTextEdit()
         font = QFont("Courier")
         font.setStyleHint(QFont.Monospace)
@@ -70,9 +71,9 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
         headers.setReadOnly(True)
         return headers
 
-    def __build_body_tab(self, message: HttpMessage, state):
+    def __build_body_tab(self, message: HttpMessage, context: RequestResponse, state):
         if message and message.has_body():
-            body = BodyContentViewer(self.plugin_registry, message, state)
+            body = BodyContentViewer(self.plugin_registry, message, context, state)
         else:
             body = QLabel("No body")
         return body
