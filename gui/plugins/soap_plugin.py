@@ -119,7 +119,7 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
     def restore_settings(self, settings: QSettings):
         settings.beginGroup("soap_plugin")
         if settings.value("filter_non_soap_traffic", None):
-            self.filter_non_soap_traffic = bool(settings.value("filter_non_soap_traffic"))
+            self.filter_non_soap_traffic = settings.value("filter_non_soap_traffic") == "true"
         if settings.value("filter_methods", None):
             self.filter_methods_as_string = settings.value("filter_methods")
 
