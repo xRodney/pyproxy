@@ -80,6 +80,7 @@ class MainWindow(QWidget):
         self.show()
 
         self.update_status(self.worker.status())
+        self.onMessageSelected(None)
 
     def createMenu(self, mainMenu):
         #mainMenu = QMenuBar()

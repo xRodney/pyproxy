@@ -29,10 +29,11 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
         return msg.first_line().decode().split("\r\n")[0] if msg else "Unmatched"
 
     def get_tabs(self, rr):
-        yield lambda state: self.__build_headers_tab(rr.request, state), "Request head"
-        yield lambda state: self.__build_body_tab(rr.request, rr, state), "Request body"
-        yield lambda state: self.__build_headers_tab(rr.response, state), "Response head"
-        yield lambda state: self.__build_body_tab(rr.response, rr, state), "Response body"
+        if rr:
+            yield lambda state: self.__build_headers_tab(rr.request, state), "Request head"
+            yield lambda state: self.__build_body_tab(rr.request, rr, state), "Request body"
+            yield lambda state: self.__build_headers_tab(rr.response, state), "Response head"
+            yield lambda state: self.__build_body_tab(rr.response, rr, state), "Response body"
 
     def get_content_representations(self, data: HttpMessage, context: RequestResponse):
         if data.is_text():
