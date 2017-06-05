@@ -16,7 +16,7 @@ from pipe.apipe import ProxyParameters
 from pipe.communication import RequestResponse
 from pipe.persistence import parse_message_pairs, serialize_message_pairs
 
-DEFAULT_PARAMETERS = ProxyParameters("localhost", 8888, "www.httpwatch.com", 80)
+DEFAULT_PARAMETERS = ProxyParameters("0.0.0.0", 8888, "www.httpwatch.com", 80)
 
 
 class MainWindow(QWidget):
