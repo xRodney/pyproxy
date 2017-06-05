@@ -1,5 +1,5 @@
 import traceback
-import urllib
+import urllib.request
 
 from PyQt5.QtWidgets import QMessageBox
 
