@@ -3,10 +3,10 @@ import urllib.request
 
 from PyQt5.QtWidgets import QMessageBox
 
-from gui.plugins.abstract_plugins import SettingsPlugin, Plugin
+from gui.plugins.abstract_plugins import SettingsMenuPlugin, Plugin
 
 
-class RequestPlugin(Plugin, SettingsPlugin):
+class RequestPlugin(Plugin, SettingsMenuPlugin):
     def __init__(self):
         super().__init__("Test request plugin")
 

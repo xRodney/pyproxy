@@ -34,12 +34,14 @@ class TabPlugin(metaclass=ABCMeta):
 
 
 class SettingsPlugin(metaclass=ABCMeta):
-    @abstractmethod
-    def add_settings_menu(self):
-        pass
-
     def save_settings(self, settings):
         pass
 
     def restore_settings(self, settings):
+        pass
+
+
+class SettingsMenuPlugin(SettingsPlugin):
+    @abstractmethod
+    def add_settings_menu(self):
         pass

@@ -5,13 +5,13 @@ from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, \
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
 
-from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin
+from gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
 from parser.http_parser import HttpMessage, HttpRequest
 from pipe.communication import RequestResponse
 from utils import soap2python
 
 
-class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsPlugin):
+class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
     def __init__(self):
         super().__init__("Soap plugin")
         self.filter_non_soap_traffic = True
