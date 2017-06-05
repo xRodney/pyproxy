@@ -8,10 +8,11 @@ import sys
 import threading
 from threading import Thread
 
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.communication import MessageListener, MessagePairer, MessageProcessor
-
 from proxy.parser import http_parser
+from proxy.parser.parser_utils import intialize_parser, parse
+from proxy.pipe import default_recipe
+from proxy.pipe.communication import MessageListener, MessagePairer
+from proxy.pipe.recipe.transform import Proxy, PassThroughMessage, RequestResponseMessage
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
@@ -56,18 +57,26 @@ def remote_connection_string(writer):
         writer.get_extra_info('peername'))
 
 
-async def proxy_data(reader, writer, connection_string, pairer, processor):
+async def proxy_data(reader, writer, back_writer, connection_string, pairer, processor):
     try:
         parser = intialize_parser(http_parser.get_http_request)
         while True:
             data = await reader.read(BUFFER_SIZE)
 
             for msg in parse(parser, data):
-                msg = processor.process_message(msg)
-                pairer.add_message(msg)
-                for data in msg.to_bytes():
-                    writer.write(data)
-                await writer.drain()
+                msg = processor(msg)
+                if isinstance(msg, PassThroughMessage):
+                    msg = msg.message
+                    pairer.add_message(msg)
+                    for data in msg.to_bytes():
+                        writer.write(data)
+                    await writer.drain()
+                elif isinstance(msg, RequestResponseMessage):
+                    msg1, msg2 = msg.messages
+                    pairer.add_message_pair(msg1, msg2)
+                    for data in msg2.to_bytes():
+                        back_writer.write(data)
+                    await back_writer.drain()
 
             if not data:
                 break
@@ -98,10 +107,11 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         logger.info('connected to remote {}'.format(remote_string))
 
         pairer = MessagePairer(listener)
-        processor = MessageProcessor(proxy_parameters)
+        processor = Proxy(proxy_parameters)
+        default_recipe.recipe(processor)
 
-        asyncio.ensure_future(proxy_data(client_reader, remote_writer, remote_string, pairer, processor))
-        asyncio.ensure_future(proxy_data(remote_reader, client_writer, client_string, pairer, processor))
+        asyncio.ensure_future(proxy_data(client_reader, remote_writer, client_writer, remote_string, pairer, processor))
+        asyncio.ensure_future(proxy_data(remote_reader, client_writer, remote_writer, client_string, pairer, processor))
 
 
 def parse_addr_port_string(addr_port_string):
