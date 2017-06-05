@@ -22,23 +22,35 @@ class CmdPlugin(Plugin, SettingsPlugin, TabPlugin):
         self.worker = None
 
     def save_settings(self, settings):
-        settings.setValue("command_plugin_command", self.command)
+        settings.beginGroup("cmd_plugin")
+        settings.setValue("command", self.worker.command)
+        settings.setValue("work_dir", self.worker.work_dir)
+        settings.endGroup()
 
     def restore_settings(self, settings: QSettings):
+        self.worker = CmdWorder()
+        self.worker.onOutput.connect(self.__on_output)
 
-        if settings.value("command_plugin_command", None):
-            self.worker.command = settings.value("command_plugin_command")
+        settings.beginGroup("cmd_plugin")
+        if settings.value("command", None):
+            self.worker.command = settings.value("command")
+        if settings.value("work_dir", None):
+            self.worker.work_dir = settings.value("work_dir")
+        settings.endGroup()
 
     def get_tabs(self, data):
         yield lambda state: self.__build_tab(state), "Command runner"
 
     def __build_tab(self, state):
         if not self.widget:
-            self.worker = CmdWorder(self.plugin_registry.parameters)
-            self.worker.onOutput.connect(self.__on_output)
-
+            self.worker.parameters = self.plugin_registry.parameters
             self.widget = QWidget()
             vbox = QVBoxLayout()
+
+            workDirEdit = QLineEdit()
+            workDirEdit.setText(self.worker.work_dir)
+            workDirEdit.textChanged.connect(self.__workDirChanged)
+            vbox.addWidget(workDirEdit)
 
             hbox = QHBoxLayout()
             cmdEdit = QLineEdit()
@@ -70,6 +82,9 @@ class CmdPlugin(Plugin, SettingsPlugin, TabPlugin):
     def __commandChanged(self, event):
         self.worker.command = event
 
+    def __workDirChanged(self, event):
+        self.worker.work_dir = event
+
     def __on_output(self, outs_errs):
         outs, errs = outs_errs
 
@@ -88,11 +103,12 @@ class CmdPlugin(Plugin, SettingsPlugin, TabPlugin):
 class CmdWorder(QWidget):
     onOutput = pyqtSignal(tuple)
 
-    def __init__(self, parameters):
+    def __init__(self):
         super().__init__()
-        self.parameters = parameters
+        self.parameters = None
         self.thread = None
         self.command = DEFAULT_COMMAND
+        self.work_dir = None
 
     def start(self):
         command = self.command
@@ -100,7 +116,7 @@ class CmdWorder(QWidget):
         command = command.replace("${local_port}", str(self.parameters.local_port))
         command = command.replace("${remote_address}", self.parameters.remote_address)
         command = command.replace("${remote_port}", str(self.parameters.remote_port))
-        self.thread = CmdThread(command, self.__on_output)
+        self.thread = CmdThread(command, self.work_dir, self.__on_output)
         self.thread.start()
 
     def stop(self):
@@ -115,15 +131,16 @@ class CmdWorder(QWidget):
 
 
 class CmdThread(Thread):
-    def __init__(self, command, listener):
+    def __init__(self, command, work_dir, listener):
         Thread.__init__(self, daemon=True)
+        self.work_dir = work_dir if work_dir else None
         self.listener = listener
         self.command = command
         self.stop_requested = False
 
     def run(self):
         args = shlex.split(self.command)
-        proc = subprocess.Popen(self.command, universal_newlines=True, shell=True, bufsize=0,
+        proc = subprocess.Popen(self.command, universal_newlines=True, shell=True, bufsize=0, cwd=self.work_dir,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         line = proc.stdout.readline()

@@ -1,4 +1,4 @@
-from gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin
+from gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, SettingsPlugin
 from parser.http_parser import HttpMessage
 from pipe.communication import RequestResponse
 
@@ -61,10 +61,10 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugi
 
     def save_settings(self, settings):
         for plugin in self.__plugins:
-            if isinstance(plugin, SettingsMenuPlugin):
+            if isinstance(plugin, SettingsPlugin):
                 plugin.save_settings(settings)
 
     def restore_settings(self, settings):
         for plugin in self.__plugins:
-            if isinstance(plugin, SettingsMenuPlugin):
+            if isinstance(plugin, SettingsPlugin):
                 plugin.restore_settings(settings)
