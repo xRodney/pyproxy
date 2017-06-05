@@ -2,6 +2,7 @@ import sys
 
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
     QFileDialog, QAction, QMenuBar
 
@@ -75,13 +76,14 @@ class MainWindow(QWidget):
         vbox.addWidget(self.tabs)
 
         self.setLayout(vbox)
-        vbox.setMenuBar(self.createMenu())
+        vbox.setMenuBar(self.createMenu(QMenuBar()))
         self.show()
 
         self.update_status(self.worker.status())
 
-    def createMenu(self):
-        mainMenu = QMenuBar()
+    def createMenu(self, mainMenu):
+        #mainMenu = QMenuBar()
+        #mainMenu.setNativeMenuBar(False)
         fileMenu = mainMenu.addMenu('&File')
 
         openAction = QAction('&Open', self)
@@ -105,6 +107,11 @@ class MainWindow(QWidget):
             settignsMenu.addAction(action)
 
         return mainMenu
+
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        self.createMenu(menu)
+        menu.exec_(self.mapToGlobal(event.pos()))
 
     def getSettingsCallback(self, callback):
         def func():
