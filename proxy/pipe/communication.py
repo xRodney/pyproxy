@@ -9,6 +9,7 @@ class RequestResponse:
         self.guid = uuid.uuid4()
         self.response = response
         self.request = request
+        self.processing = None
 
     def __str__(self):
         s = "====================================================\n"
@@ -48,6 +49,8 @@ class MessagePairer:
 
         request_response.set_request_or_response(message)
         self.have_request_response(request_response)
+
+        return request_response
 
     def add_message_pair(self, request, response):
         request_response = RequestResponse(request, response)

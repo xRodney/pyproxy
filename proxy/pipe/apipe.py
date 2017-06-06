@@ -9,10 +9,11 @@ import threading
 from threading import Thread
 
 from proxy.parser import http_parser
+from proxy.parser.http_parser import HttpRequest, HttpResponse
 from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe import default_recipe
 from proxy.pipe.communication import MessageListener, MessagePairer
-from proxy.pipe.recipe.transform import Proxy, PassThroughMessage, RequestResponseMessage
+from proxy.pipe.recipe.transform import Proxy, PassThroughMessage, RequestResponseMessage, OngoingProcessing
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
@@ -57,6 +58,11 @@ def remote_connection_string(writer):
         writer.get_extra_info('peername'))
 
 
+async def write_message(msg, writer):
+    for data in msg.to_bytes():
+        writer.write(data)
+    await writer.drain()
+
 async def proxy_data(reader, writer, back_writer, connection_string, pairer, processor):
     try:
         parser = intialize_parser(http_parser.get_http_request)
@@ -64,19 +70,33 @@ async def proxy_data(reader, writer, back_writer, connection_string, pairer, pro
             data = await reader.read(BUFFER_SIZE)
 
             for msg in parse(parser, data):
-                msg = processor(msg)
-                if isinstance(msg, PassThroughMessage):
-                    msg = msg.message
-                    pairer.add_message(msg)
-                    for data in msg.to_bytes():
-                        writer.write(data)
-                    await writer.drain()
-                elif isinstance(msg, RequestResponseMessage):
-                    msg1, msg2 = msg.messages
-                    pairer.add_message_pair(msg1, msg2)
-                    for data in msg2.to_bytes():
-                        back_writer.write(data)
-                    await back_writer.drain()
+                if isinstance(msg, HttpRequest):
+                    processing = OngoingProcessing(processor, msg)
+                    processing_message = processing.get_processing_message()
+                    if isinstance(processing_message, PassThroughMessage):
+                        msg = processing_message.request
+                        request_response = pairer.add_message(msg)
+                        await write_message(msg, writer)
+                        if request_response.response is not None:
+                            request_response.response = processing.have_response(request_response.response)
+                            await write_message(request_response.response, back_writer)
+                            pairer.have_request_response(request_response)
+                        else:
+                            request_response.processing = processing
+
+                    elif isinstance(processing_message, RequestResponseMessage):
+                        response = processing.have_response(processing_message.response)
+                        await write_message(response, back_writer)
+                        pairer.add_message_pair(processing_message.request, response)
+
+                elif isinstance(msg, HttpResponse):
+                    request_response = pairer.add_message(msg)
+                    if request_response.request:
+                        request_response.response = request_response.processing.have_response(msg)
+                        await write_message(request_response.response, writer)
+                        del request_response.processing
+                        pairer.have_request_response(request_response)
+
 
             if not data:
                 break

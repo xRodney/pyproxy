@@ -3,14 +3,21 @@ from hamcrest.core.matcher import Matcher
 from proxy.parser.http_parser import HttpResponse, HttpRequest
 
 
+async def write_message(msg, writer):
+    for data in msg.to_bytes():
+        writer.write(data)
+    await writer.drain()
+
+
 class PassThroughMessage:
-    def __init__(self, message):
-        self.message = message
+    def __init__(self, request):
+        self.request = request
 
 
 class RequestResponseMessage():
     def __init__(self, request, response):
-        self.messages = request, response
+        self.request = request
+        self.response = response
 
 
 class DoesNotAccept(Exception):
@@ -44,7 +51,7 @@ class Proxy:
 
         for branch in self.__branches:
             try:
-                response = branch(request)
+                response = yield from branch(request)
                 return response
             except DoesNotAccept:
                 pass
@@ -52,11 +59,11 @@ class Proxy:
         raise DoesNotAccept()
 
     def then_respond(self, responder):
-        self.__branches.append(lambda request: RequestResponseMessage(request, responder(request)))
+        self.__branches.append(PredefinedResponder(responder))
         return self
 
     def then_pass_through(self):
-        self.__branches.append(lambda request: PassThroughMessage(request))
+        self.__branches.append(PassThroughResponder())
         return self
 
 
@@ -88,3 +95,39 @@ class TransformingProxy(Proxy):
             response.message = self.__transform.transform_response(response.message, self)
 
         return response
+
+
+class PassThroughResponder:
+    def __call__(self, request):
+        response = yield PassThroughMessage(request)
+        return response
+
+
+class PredefinedResponder:
+    def __init__(self, responder):
+        self.responder = responder
+
+    def __call__(self, request):
+        response = self.responder(request)
+        result = yield RequestResponseMessage(request, response)
+        return result
+
+
+class OngoingProcessing:
+    def __init__(self, processor, msg):
+        self.processing = processor(msg)
+        self.__state = 0
+
+    def get_processing_message(self):
+        self.__state += 1
+        assert self.__state == 1, "get_request_message must be called first"
+        return self.processing.send(None)
+
+    def have_response(self, response):
+        self.__state += 1
+        assert self.__state == 2, "have_response must be called second"
+        try:
+            self.processing.send(response)
+            assert False, "Processing pipeline must yield exactly once"
+        except StopIteration as e:
+            return e.value
