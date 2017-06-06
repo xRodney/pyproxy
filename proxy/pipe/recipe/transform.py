@@ -13,6 +13,10 @@ class RequestResponseMessage():
         self.messages = request, response
 
 
+class DoesNotAccept(Exception):
+    pass
+
+
 class Transform(object):
     def transform_request(self, request: HttpRequest, proxy: "Proxy") -> HttpRequest:
         return request
@@ -22,39 +26,30 @@ class Transform(object):
 
 
 class Proxy:
-    def __init__(self, parameters, transform: Transform = None, guard=None):
-        self.__guard = guard
-        self.__transform = transform
+    def __init__(self, parameters):
         self.__branches = []
         self.parameters = parameters
 
     def when(self, matcher: Matcher) -> "Proxy":
-        proxy = Proxy(self.parameters, guard=matcher)
+        proxy = GuardedProxy(self.parameters, matcher)
         self.__branches.append(proxy)
         return proxy
 
     def transform(self, transform: Transform):
-        proxy = Proxy(self.parameters, transform=transform)
+        proxy = TransformingProxy(self.parameters, transform)
         self.__branches.append(proxy)
         return proxy
 
     def __call__(self, request: HttpRequest):
-        if self.__guard and not self.__guard.matches(request):
-            return None
 
-        if self.__transform:
-            request = self.__transform.transform_request(request, self)
-
-        response = None
         for branch in self.__branches:
-            response = branch(request)
-            if response:
-                break
+            try:
+                response = branch(request)
+                return response
+            except DoesNotAccept:
+                pass
 
-        if isinstance(response, RequestResponseMessage) and self.__transform:
-            response.message = self.__transform.transform_response(response.message, self)
-
-        return response
+        raise DoesNotAccept()
 
     def then_respond(self, responder):
         self.__branches.append(lambda request: RequestResponseMessage(request, responder(request)))
@@ -63,3 +58,33 @@ class Proxy:
     def then_pass_through(self):
         self.__branches.append(lambda request: PassThroughMessage(request))
         return self
+
+
+class GuardedProxy(Proxy):
+    def __init__(self, parameters, guard):
+        super().__init__(parameters)
+        self.__guard = guard
+
+    def __call__(self, request: HttpRequest):
+        if not self.__guard.matches(request):
+            raise DoesNotAccept()
+
+        return super().__call__(request)
+
+
+class TransformingProxy(Proxy):
+    def __init__(self, parameters, transform):
+        super().__init__(parameters)
+        self.__transform = transform
+
+    def __call__(self, request: HttpRequest):
+        request = self.__transform.transform_request(request, self)
+        if not request:
+            raise DoesNotAccept()
+
+        response = super().__call__(request)
+
+        if isinstance(response, RequestResponseMessage):
+            response.message = self.__transform.transform_response(response.message, self)
+
+        return response
