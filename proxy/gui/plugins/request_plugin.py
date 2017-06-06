@@ -3,7 +3,7 @@ import urllib.request
 
 from PyQt5.QtWidgets import QMessageBox
 
-from gui.plugins.abstract_plugins import SettingsMenuPlugin, Plugin
+from proxy.gui.plugins.abstract_plugins import SettingsMenuPlugin, Plugin
 
 
 class RequestPlugin(Plugin, SettingsMenuPlugin):

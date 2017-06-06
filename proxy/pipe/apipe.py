@@ -8,9 +8,10 @@ import sys
 import threading
 from threading import Thread
 
-from parser import http_parser
-from parser.parser_utils import intialize_parser, parse
-from pipe.communication import MessageListener, MessagePairer, MessageProcessor
+from proxy.parser.parser_utils import intialize_parser, parse
+from proxy.pipe.communication import MessageListener, MessagePairer, MessageProcessor
+
+from proxy.parser import http_parser
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5

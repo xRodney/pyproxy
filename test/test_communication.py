@@ -1,9 +1,9 @@
 from collections import OrderedDict
 
 import pytest
+from proxy.pipe.communication import MessagePairer, MessageListener, RequestResponse
 
-from parser.http_parser import HttpRequest, HttpResponse
-from pipe.communication import MessagePairer, MessageListener, RequestResponse
+from proxy.parser.http_parser import HttpRequest, HttpResponse
 
 
 class TestListener(MessageListener):

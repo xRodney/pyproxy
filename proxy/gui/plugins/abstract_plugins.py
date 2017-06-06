@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from pipe.communication import RequestResponse
+from proxy.pipe.communication import RequestResponse
 
 
 class Plugin:

@@ -1,6 +1,7 @@
-from gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, SettingsPlugin
-from parser.http_parser import HttpMessage
-from pipe.communication import RequestResponse
+from proxy.gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, SettingsPlugin
+from proxy.pipe.communication import RequestResponse
+
+from proxy.parser.http_parser import HttpMessage
 
 
 class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin):

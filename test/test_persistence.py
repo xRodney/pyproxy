@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from pipe.persistence import parse_message_pairs, serialize_message_pairs
+from proxy.pipe.persistence import parse_message_pairs, serialize_message_pairs
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 

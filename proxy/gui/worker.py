@@ -1,8 +1,8 @@
 from PyQt5.QtCore import QObject, pyqtSignal
+from proxy.pipe.communication import MessageListener, RequestResponse
 
-from pipe import apipe
-from pipe.apipe import ProxyParameters
-from pipe.communication import MessageListener, RequestResponse
+from proxy.pipe import apipe
+from proxy.pipe.apipe import ProxyParameters
 
 
 class Worker(QObject, MessageListener):

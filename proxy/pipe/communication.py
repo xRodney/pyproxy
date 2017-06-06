@@ -1,7 +1,7 @@
 import collections
 import uuid
 
-from parser.http_parser import HttpRequest, HttpResponse, HttpMessage
+from proxy.parser.http_parser import HttpRequest, HttpResponse, HttpMessage
 
 
 class RequestResponse:

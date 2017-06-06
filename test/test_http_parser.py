@@ -1,5 +1,5 @@
-import parser
-from parser.parser_utils import parse, intialize_parser
+from proxy.parser.parser_utils import parse, intialize_parser
+from proxy.parser.http_parser import get_http_request
 
 
 def chunks(l, n):
@@ -11,7 +11,7 @@ def chunks(l, n):
 def test_two_requests_whole():
     msg = b"GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\nGET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n"
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = list(parse(parser, msg))
 
     assert len(parsed_messages) == 2
@@ -26,7 +26,7 @@ def test_two_requests_in_pieces():
     msg = b"GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\nGET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n"
     msgs = chunks(msg, 15)
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = []
 
     for data in msgs:
@@ -48,7 +48,7 @@ def test_two_responses_whole():
           b"abcd\r\n"
 
     msg = msg * 2
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = list(parse(parser, msg))
 
     assert len(parsed_messages) == 2
@@ -63,7 +63,7 @@ def test_one_response_no_length():
           b"\r\n" + \
           b"abcd\r\n"
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = []
     parsed_messages += parse(parser, msg)
     # We need to explicitly close the message, otherwise the parser does not know when the message ends
@@ -81,7 +81,7 @@ def test_two_responses_no_length():
           b"\r\n" + \
           b"abcd\r\n"
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = []
     parsed_messages += parse(parser, msg)
     # We need to explicitly close the message, otherwise the parser does not know when the message ends
@@ -104,7 +104,7 @@ def test_two_responses_in_pieces():
           b"abcd\r\n"
 
     msg = msg * 3
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     msgs = chunks(msg, 15)
     parsed_messages = []
 
@@ -133,7 +133,7 @@ def test_one_response_chunked_whole():
           b"0\r\n" + \
           b"\r\n"
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = list(parse(parser, msg))
     assert len(parsed_messages) == 1
     for parsed_message in parsed_messages:
@@ -157,7 +157,7 @@ def test_one_response_chunked_in_parts():
           b"0\r\n" + \
           b"\r\n"
 
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     msgs = chunks(msg, 15)
     parsed_messages = []
 
@@ -187,7 +187,7 @@ def test_two_responses_chunked():
           b"\r\n"
 
     msg = msg * 2
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
     parsed_messages = list(parse(parser, msg))
 
     assert len(parsed_messages) == 2
@@ -213,7 +213,7 @@ def test_two_responses_chunked_in_parts():
           b"\r\n"
 
     msg = msg * 2
-    parser = intialize_parser(parser.get_http_request)
+    parser = intialize_parser(get_http_request)
 
     msgs = chunks(msg, 15)
     parsed_messages = []

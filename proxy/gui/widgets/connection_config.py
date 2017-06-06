@@ -1,7 +1,7 @@
 from PyQt5.QtCore import pyqtSignal, QSettings
 from PyQt5.QtWidgets import QWidget, QLineEdit, QHBoxLayout
 
-from pipe.apipe import ProxyParameters
+from proxy.pipe.apipe import ProxyParameters
 
 
 class ConnectionConfig(QWidget):
