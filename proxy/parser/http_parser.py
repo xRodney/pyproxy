@@ -7,10 +7,10 @@ CRLF = "\r\n"
 
 
 class HttpMessage:
-    def __init__(self):
-        self.version = None
+    def __init__(self, body=None):
+        self.version = b"HTTP/1.1"
         self.headers = OrderedDict()
-        self.body = None
+        self.body = body
         self.__body_as_text = None
 
     def is_text(self):
@@ -81,10 +81,10 @@ class HttpMessage:
 
 
 class HttpRequest(HttpMessage):
-    def __init__(self):
-        super().__init__()
-        self.method = None
-        self.path = None
+    def __init__(self, method=None, path=None, body=None):
+        super().__init__(body=body)
+        self.method = method
+        self.path = path
 
     def has_body(self):
         return self.method in (b"POST", b"PUT", b"PATCH")
@@ -94,10 +94,10 @@ class HttpRequest(HttpMessage):
 
 
 class HttpResponse(HttpMessage):
-    def __init__(self):
-        super().__init__()
-        self.status_message = None
-        self.status = None
+    def __init__(self, status=None, status_message=None, body=None):
+        super().__init__(body=body)
+        self.status = status
+        self.status_message = status_message
 
     def has_body(self):
         if b"Content-Length" in self.headers:

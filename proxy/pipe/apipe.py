@@ -9,11 +9,10 @@ import threading
 from threading import Thread
 
 from proxy.parser import http_parser
-from proxy.parser.http_parser import HttpRequest, HttpResponse
 from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe import default_recipe
-from proxy.pipe.communication import MessageListener, MessagePairer
-from proxy.pipe.recipe.transform import Proxy, PassThroughMessage, RequestResponseMessage, OngoingProcessing
+from proxy.pipe.communication import MessageListener, InputEndpoint, OutputEndpoint, Dispatcher
+from proxy.pipe.recipe.transform import Proxy
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
@@ -63,45 +62,21 @@ async def write_message(msg, writer):
         writer.write(data)
     await writer.drain()
 
-async def proxy_data(reader, writer, back_writer, connection_string, pairer, processor):
+
+async def proxy_data(reader, writer, endpoint_name, dispatcher, connection_string):
     try:
         parser = intialize_parser(http_parser.get_http_request)
         while True:
             data = await reader.read(BUFFER_SIZE)
 
             for msg in parse(parser, data):
-                if isinstance(msg, HttpRequest):
-                    processing = OngoingProcessing(processor, msg)
-                    processing_message = processing.get_processing_message()
-                    if isinstance(processing_message, PassThroughMessage):
-                        msg = processing_message.request
-                        request_response = pairer.add_message(msg)
-                        await write_message(msg, writer)
-                        if request_response.response is not None:
-                            request_response.response = processing.have_response(request_response.response)
-                            await write_message(request_response.response, back_writer)
-                            pairer.have_request_response(request_response)
-                        else:
-                            request_response.processing = processing
-
-                    elif isinstance(processing_message, RequestResponseMessage):
-                        response = processing.have_response(processing_message.response)
-                        await write_message(response, back_writer)
-                        pairer.add_message_pair(processing_message.request, response)
-
-                elif isinstance(msg, HttpResponse):
-                    request_response = pairer.add_message(msg)
-                    if request_response.request:
-                        request_response.response = request_response.processing.have_response(msg)
-                        await write_message(request_response.response, writer)
-                        del request_response.processing
-                        pairer.have_request_response(request_response)
-
+                await dispatcher.dispatch(endpoint_name, msg)
 
             if not data:
                 break
     except Exception as e:
         logger.info('proxy_task exception {}'.format(e))
+        raise
     finally:
         writer.close()
         logger.info('close connection {}'.format(connection_string))
@@ -126,12 +101,15 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
 
-        pairer = MessagePairer(listener)
         processor = Proxy(proxy_parameters)
         default_recipe.recipe(processor)
 
-        asyncio.ensure_future(proxy_data(client_reader, remote_writer, client_writer, remote_string, pairer, processor))
-        asyncio.ensure_future(proxy_data(remote_reader, client_writer, remote_writer, client_string, pairer, processor))
+        dispatcher = Dispatcher()
+        dispatcher.add_endpoint(InputEndpoint("local", client_writer, processor))
+        dispatcher.add_endpoint(OutputEndpoint("remote", remote_writer))
+
+        asyncio.ensure_future(proxy_data(client_reader, remote_writer, "local", dispatcher, client_string))
+        asyncio.ensure_future(proxy_data(remote_reader, client_writer, "remote", dispatcher, remote_string))
 
 
 def parse_addr_port_string(addr_port_string):

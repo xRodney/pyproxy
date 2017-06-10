@@ -39,3 +39,11 @@ class HasMethod(BaseMatcher):
 
 def has_method(method):
     return HasMethod(method)
+
+
+class LambdaMatcher(BaseMatcher):
+    def __init__(self, predicate):
+        self.predicate = predicate
+
+    def _matches(self, obj):
+        return self.predicate(obj)

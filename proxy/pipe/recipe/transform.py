@@ -1,6 +1,8 @@
 from hamcrest.core.matcher import Matcher
+from typing import Union, Callable, Any
 
 from proxy.parser.http_parser import HttpResponse, HttpRequest
+from proxy.pipe.recipe.matchers import LambdaMatcher
 
 
 async def write_message(msg, writer):
@@ -25,10 +27,10 @@ class DoesNotAccept(Exception):
 
 
 class Transform(object):
-    def transform_request(self, request: HttpRequest, proxy: "Proxy") -> HttpRequest:
+    def transform_request(self, request, proxy: "Proxy") -> HttpRequest:
         return request
 
-    def transform_response(self, response: HttpResponse, proxy: "Proxy") -> HttpResponse:
+    def transform_response(self, request, response, original_request, proxy: "Proxy") -> HttpResponse:
         return response
 
 
@@ -37,7 +39,10 @@ class Proxy:
         self.__branches = []
         self.parameters = parameters
 
-    def when(self, matcher: Matcher) -> "Proxy":
+    def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Proxy":
+        if callable(matcher):
+            matcher = LambdaMatcher(matcher)
+
         proxy = GuardedProxy(self.parameters, matcher)
         self.__branches.append(proxy)
         return proxy
@@ -47,12 +52,12 @@ class Proxy:
         self.__branches.append(proxy)
         return proxy
 
-    def __call__(self, request: HttpRequest):
+    def __call__(self, endpoint_name, request: HttpRequest):
 
         for branch in self.__branches:
             try:
                 response = yield from branch(request)
-                return response
+                return endpoint_name, response
             except DoesNotAccept:
                 pass
 
@@ -72,11 +77,11 @@ class GuardedProxy(Proxy):
         super().__init__(parameters)
         self.__guard = guard
 
-    def __call__(self, request: HttpRequest):
+    def __call__(self, endpoint_name, request: HttpRequest):
         if not self.__guard.matches(request):
             raise DoesNotAccept()
 
-        return super().__call__(request)
+        return super().__call__(endpoint_name, request)
 
 
 class TransformingProxy(Proxy):
@@ -84,17 +89,16 @@ class TransformingProxy(Proxy):
         super().__init__(parameters)
         self.__transform = transform
 
-    def __call__(self, request: HttpRequest):
-        request = self.__transform.transform_request(request, self)
-        if not request:
+    def __call__(self, endpoint_name, request: HttpRequest):
+        new_request = self.__transform.transform_request(request, self)
+        if not new_request:
             raise DoesNotAccept()
 
-        response = super().__call__(request)
+        response = yield from super().__call__(endpoint_name, new_request)
 
-        if isinstance(response, RequestResponseMessage):
-            response.message = self.__transform.transform_response(response.message, self)
+        response = self.__transform.transform_response(new_request, response, request, self)
 
-        return response
+        return endpoint_name, response
 
 
 class PassThroughResponder:

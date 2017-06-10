@@ -1,6 +1,8 @@
 import collections
 import uuid
 
+from typing import Union
+
 from proxy.parser.http_parser import HttpRequest, HttpResponse, HttpMessage
 
 
@@ -73,3 +75,89 @@ class MessageListener:
 
     def on_error(self, error):
         print(error)
+
+
+class Endpoint:
+    def __init__(self, name: str, writer):
+        self.name = name
+        self.writer = writer
+
+    async def _write_message(self, message: HttpMessage):
+        for data in message.to_bytes():
+            self.writer.write(data)
+        await self.writer.drain()
+
+    async def on_received(self, message: HttpMessage):
+        pass
+
+    async def send(self, message: HttpMessage, processing):
+        pass
+
+
+class InputEndpoint(Endpoint):
+    def __init__(self, name: str, writer, processor):
+        super().__init__(name, writer)
+        self.processor = processor
+
+    async def on_received(self, message: HttpMessage):
+        flow = self.processor(message)
+        processing = Processing(self.name, flow)
+        endpoint_name, message = processing.send_message(None)
+        return processing, endpoint_name, message
+
+    async def send(self, message: HttpMessage, processing):
+        await self._write_message(message)
+
+
+class OutputEndpoint(Endpoint):
+    def __init__(self, name: str, writer):
+        super().__init__(name, writer)
+        self.pending_processsings = collections.deque()
+
+    async def send(self, message: HttpMessage, processing):
+        self.pending_processsings.append(processing)
+        await self._write_message(message)
+
+    async def on_received(self, message: HttpMessage):
+        assert len(self.pending_processsings) > 0, "Response without a request"
+        processing = self.pending_processsings.popleft()
+        endpoint_name, message = processing.send_message(message)
+        return processing, endpoint_name, message
+
+
+class Dispatcher:
+    def __init__(self):
+        self.endpoints = {}
+
+    def add_endpoint(self, endpoint: Endpoint):
+        self.endpoints[endpoint.name] = endpoint
+
+    async def dispatch(self, source_endpoint: Union[str, Endpoint], received_message: HttpMessage):
+        if isinstance(source_endpoint, str):
+            source_endpoint = self.endpoints[source_endpoint]
+
+        processing, target_endpoint, message_to_send = await source_endpoint.on_received(received_message)
+
+        if isinstance(target_endpoint, str):
+            target_endpoint = self.endpoints[target_endpoint]
+
+        await target_endpoint.send(message_to_send, processing)
+
+
+class Processing:
+    def __init__(self, source_endpoint, flow):
+        self.source_endpoint = source_endpoint
+        self.flow = flow
+
+    def send_message(self, message):
+        if self.has_finished():
+            raise ValueError("Flow has already finished")
+
+        try:
+            return self.flow.send(message)
+        except StopIteration as e:
+            self.flow = None
+            return self.source_endpoint, e.value
+
+    def has_finished(self):
+        return self.flow is None
