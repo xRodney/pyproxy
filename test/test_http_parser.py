@@ -1,5 +1,3 @@
-import pytest
-
 from proxy.parser.http_parser import get_http_request, HttpRequest
 from proxy.parser.parser_utils import parse, intialize_parser
 
@@ -229,7 +227,6 @@ def test_two_responses_chunked_in_parts():
         assert parsed_message.body == b"Wikipedia in\r\n\r\nchunks."
 
 
-@pytest.mark.xfail
 def test_minimal_request():
     request_bytes = b"".join(HttpRequest(b"GET", b"/sample/first").to_bytes())
     parser = intialize_parser(get_http_request)

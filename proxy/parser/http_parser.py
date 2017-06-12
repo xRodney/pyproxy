@@ -158,7 +158,7 @@ def get_firstline(data):
         request.method = method
         path, data = yield from get_word(data)
         request.path = path
-        version_str, data = yield from get_word(data)
+        version_str, data = yield from get_line(data)
         request.version = parse_http_version(version_str)
         return request, data
 
