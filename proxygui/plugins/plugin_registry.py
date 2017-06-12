@@ -1,5 +1,5 @@
 from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.communication import RequestResponse
+from proxy.pipe.reporting import RequestResponse
 from proxygui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, \
     SettingsPlugin
 

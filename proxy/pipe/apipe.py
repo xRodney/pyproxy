@@ -8,9 +8,10 @@ import threading
 from threading import Thread
 
 from proxy.pipe import default_recipe
-from proxy.pipe.communication import MessageListener, InputEndpoint, OutputEndpoint, Dispatcher
+from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
 from proxy.pipe.logger import logger
 from proxy.pipe.recipe.transform import Proxy
+from proxy.pipe.reporting import MessageListener
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5

@@ -1,10 +1,9 @@
 from io import BufferedIOBase
 from uuid import UUID
 
-from proxy.parser.parser_utils import get_word, intialize_parser, parse
-from proxy.pipe.communication import RequestResponse
-
 from proxy.parser.http_parser import HttpMessage, get_http_request, get_line
+from proxy.parser.parser_utils import get_word, intialize_parser, parse
+from proxy.pipe.reporting import RequestResponse
 
 
 def serialize_message(msg: HttpMessage, stream: BufferedIOBase):

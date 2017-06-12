@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMes
 
 from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.communication import RequestResponse
 from proxy.pipe.persistence import parse_message_pairs, serialize_message_pairs
+from proxy.pipe.reporting import RequestResponse
 from proxygui.plugins import PLUGINS
 from proxygui.plugins.plugin_registry import PluginRegistry
 from proxygui.widgets.connection_config import ConnectionConfig

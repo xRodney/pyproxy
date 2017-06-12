@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QLabel
 from hexdump import hexdump
 
 from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.communication import RequestResponse
+from proxy.pipe.reporting import RequestResponse
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
 from proxygui.widgets.body_content_viewer import BodyContentViewer
 

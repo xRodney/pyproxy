@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineE
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
 
 from proxy.parser.http_parser import HttpMessage, HttpRequest
-from proxy.pipe.communication import RequestResponse
+from proxy.pipe.reporting import RequestResponse
 from proxy.utils import soap2python
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
 

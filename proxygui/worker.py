@@ -2,7 +2,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from proxy.pipe import apipe
 from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.communication import MessageListener, RequestResponse
+from proxy.pipe.reporting import RequestResponse, MessageListener
 
 
 class Worker(QObject, MessageListener):
