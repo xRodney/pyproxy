@@ -1,11 +1,11 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QLabel
-from proxy.gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
-from proxy.gui.widgets.body_content_viewer import BodyContentViewer
 from hexdump import hexdump
-from proxy.pipe.communication import RequestResponse
 
 from proxy.parser.http_parser import HttpMessage
+from proxy.pipe.communication import RequestResponse
+from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
+from proxygui.widgets.body_content_viewer import BodyContentViewer
 
 
 class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):

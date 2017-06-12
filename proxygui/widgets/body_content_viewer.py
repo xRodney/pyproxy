@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox
-from proxy.pipe.communication import RequestResponse
 
 from proxy.parser.http_parser import HttpMessage
+from proxy.pipe.communication import RequestResponse
 
 
 class BodyContentViewer(QWidget):

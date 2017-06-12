@@ -3,7 +3,7 @@ import sys
 
 from PyQt5.QtWidgets import (QApplication)
 
-from proxy.gui.main_window import MainWindow
+from proxygui.main_window import MainWindow
 
 
 def main():

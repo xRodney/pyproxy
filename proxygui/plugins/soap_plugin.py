@@ -4,11 +4,11 @@ from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, \
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
-from proxy.gui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
-from proxy.pipe.communication import RequestResponse
-from proxy.utils import soap2python
 
 from proxy.parser.http_parser import HttpMessage, HttpRequest
+from proxy.pipe.communication import RequestResponse
+from proxy.utils import soap2python
+from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
 
 
 class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):

@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QPlainTextEdit, QLineEdit, QPushButton, \
     QVBoxLayout, QHBoxLayout, QWidget
 
-from proxy.gui.plugins.abstract_plugins import Plugin, TabPlugin, SettingsPlugin
+from proxygui.plugins.abstract_plugins import Plugin, SettingsPlugin, TabPlugin
 
 DEFAULT_COMMAND = "while true; do echo \"" \
                   "Proxy run on: ${local_address}:${local_port} -> ${remote_address}:${remote_port}\"; " \

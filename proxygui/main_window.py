@@ -5,17 +5,17 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
     QFileDialog, QAction, QMenuBar
-from proxy.gui.plugins import PLUGINS
-from proxy.gui.plugins.plugin_registry import PluginRegistry
-from proxy.gui.widgets.connection_config import ConnectionConfig
-from proxy.gui.widgets.http_messages_tabs import HttpMessagesTabs
-from proxy.gui.widgets.http_messages_tree_view import HttpMessagesTreeView
-from proxy.gui.worker import Worker
+
+from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import RequestResponse
 from proxy.pipe.persistence import parse_message_pairs, serialize_message_pairs
-
-from proxy.parser.http_parser import HttpMessage
+from proxygui.plugins import PLUGINS
+from proxygui.plugins.plugin_registry import PluginRegistry
+from proxygui.widgets.connection_config import ConnectionConfig
+from proxygui.widgets.http_messages_tabs import HttpMessagesTabs
+from proxygui.widgets.http_messages_tree_view import HttpMessagesTreeView
+from proxygui.worker import Worker
 
 DEFAULT_PARAMETERS = ProxyParameters("0.0.0.0", 8888, "www.httpwatch.com", 80)
 

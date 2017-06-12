@@ -1,3 +1,3 @@
-import proxy.gui.main
+import proxygui.main
 
-proxy.gui.main.main()
+proxygui.main.main()

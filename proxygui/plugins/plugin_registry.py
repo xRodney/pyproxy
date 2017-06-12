@@ -1,7 +1,7 @@
-from proxy.gui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, SettingsPlugin
-from proxy.pipe.communication import RequestResponse
-
 from proxy.parser.http_parser import HttpMessage
+from proxy.pipe.communication import RequestResponse
+from proxygui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, \
+    SettingsPlugin
 
 
 class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin):
