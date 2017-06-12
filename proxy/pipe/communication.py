@@ -39,43 +39,6 @@ class RequestResponse:
             raise ValueError("Message must be either request or response")
 
 
-class MessagePairer:
-    def __init__(self, listener=None):
-        self.pending = collections.deque()
-        self.last_class_in_pending = None
-        self.listener = listener
-
-    def add_message(self, message: HttpMessage):
-        if not isinstance(message, (HttpRequest, HttpResponse)):
-            raise Exception("Message must be either request or response")
-
-        if len(self.pending) == 0 or self.last_class_in_pending is message.__class__:
-            self.last_class_in_pending = message.__class__
-            request_response = RequestResponse()
-            self.pending.append(request_response)
-        else:
-            request_response = self.pending.popleft()
-
-        request_response.set_request_or_response(message)
-        self.have_request_response(request_response)
-
-        return request_response
-
-    def add_message_pair(self, request, response):
-        request_response = RequestResponse(request, response)
-        self.have_request_response(request_response)
-
-    def add_request(self, request: HttpRequest):
-        self.add_message(request)
-
-    def add_response(self, response: HttpResponse):
-        self.add_message(response)
-
-    def have_request_response(self, request_response):
-        if self.listener:
-            self.listener.on_request_response(request_response)
-
-
 class MessageListener:
     def on_request_response(self, request_response: RequestResponse):
         pass
