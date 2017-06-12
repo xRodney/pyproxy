@@ -2,11 +2,11 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from proxy.pipe import apipe
 from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.reporting import RequestResponse, MessageListener
+from proxy.pipe.reporting import MessageListener, LogReport
 
 
 class Worker(QObject, MessageListener):
-    received = pyqtSignal(RequestResponse)
+    received = pyqtSignal(LogReport)
     error = pyqtSignal(Exception)
     running_changed = pyqtSignal(bool)
 
@@ -34,8 +34,8 @@ class Worker(QObject, MessageListener):
     def status(self):
         return self.thread.is_running()
 
-    def on_request_response(self, request_response: RequestResponse):
-        self.received.emit(request_response)
+    def on_change(self, log):
+        self.received.emit(log)
 
     def on_error(self, error):
         self.stop()

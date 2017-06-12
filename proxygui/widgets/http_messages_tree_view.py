@@ -78,21 +78,21 @@ class HttpMessagesTreeView(QWidget):
         if data:
             self.selected.emit(data)
 
-    def onRequestResponse(self, request_response):
-        new_row = request_response.guid not in self.__index
+    def onLogChange(self, log):
+        new_row = log.guid not in self.__index
 
         if not new_row:
-            model_item = self.__index[request_response.guid]
+            model_item = self.__index[log.guid]
             branch = model_item.branch
-            model_item.model = request_response
+            model_item.model = log
         else:
             branch = [QStandardItem() for x in self.column_definitions]
-            self.__index[request_response.guid] = HttpMessagesTreeView.ModelItem(request_response, branch)
+            self.__index[log.guid] = HttpMessagesTreeView.ModelItem(log, branch)
 
-        branch[0].setData(request_response, ROLE_HTTP_MESSAGE)
+        branch[0].setData(log, ROLE_HTTP_MESSAGE)
 
         for i, column in enumerate(self.column_definitions):
-            text = self.plugin_registry.get_cell_content(request_response, column[0])
+            text = self.plugin_registry.get_cell_content(log, column[0])
             if text:
                 branch[i].setText(text)
 

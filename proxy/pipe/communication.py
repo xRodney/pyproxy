@@ -1,6 +1,5 @@
 import asyncio
 import collections
-from collections import OrderedDict
 
 from typing import Union
 
@@ -8,7 +7,7 @@ from proxy.parser import http_parser
 from proxy.parser.http_parser import HttpMessage
 from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe.logger import logger
-from proxy.pipe.reporting import RequestResponse, MessageListener
+from proxy.pipe.reporting import MessageListener, LogReport
 
 BUFFER_SIZE = 65536
 
@@ -133,7 +132,7 @@ class Processing:
     def __init__(self, source_endpoint, flow, listener: MessageListener = None):
         self.source_endpoint = source_endpoint
         self.flow = flow
-        self.log = OrderedDict()
+        self.log = LogReport()
         self.listener = listener
 
     def send_message(self, message):
@@ -150,13 +149,11 @@ class Processing:
         return self.flow is None
 
     def log_request(self, endpoint_name, message):
-        self.log.setdefault(endpoint_name, RequestResponse())
-        self.log[endpoint_name].request = message
+        self.log.log_request(endpoint_name, message)
         if self.listener:
-            self.listener.on_any_message(self.log)
+            self.listener.on_change(self.log)
 
     def log_response(self, endpoint_name, message):
-        self.log.setdefault(endpoint_name, RequestResponse())
-        self.log[endpoint_name].response = message
+        self.log.log_response(endpoint_name, message)
         if self.listener:
-            self.listener.on_any_message(self.log)
+            self.listener.on_change(self.log)

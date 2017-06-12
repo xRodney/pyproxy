@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMes
 from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.persistence import parse_message_pairs, serialize_message_pairs
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 from proxygui.plugins import PLUGINS
 from proxygui.plugins.plugin_registry import PluginRegistry
 from proxygui.widgets.connection_config import ConnectionConfig
@@ -170,8 +170,8 @@ class MainWindow(QWidget):
         self.plugin_registry.save_settings(self.settings)
         super().closeEvent(QCloseEvent)
 
-    def onReceived(self, rr: RequestResponse):
-        self.treeView.onRequestResponse(rr)
+    def onReceived(self, log: LogReport):
+        self.treeView.onLogChange(log)
 
     def onError(self, e: Exception):
         msg = QMessageBox()

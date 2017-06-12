@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox
 
 from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 
 
 class BodyContentViewer(QWidget):
@@ -22,7 +22,7 @@ class BodyContentViewer(QWidget):
         self.combo.currentIndexChanged.connect(self.onComboChanged)
         self.onComboChanged()
 
-    def setContent(self, data: HttpMessage, context: RequestResponse):
+    def setContent(self, data: HttpMessage, context: LogReport):
         self.data = data
         self.context = context
         self.combo.clear()

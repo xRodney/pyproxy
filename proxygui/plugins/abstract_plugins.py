@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 
 
 class Plugin:
@@ -17,13 +17,13 @@ class GridPlugin(metaclass=ABCMeta):
     def get_cell_content(self, data, column_id, value):
         return None
 
-    def filter_accepts_row(self, data: RequestResponse):
+    def filter_accepts_row(self, data: LogReport):
         return True
 
 
 class ContentViewPlugin(metaclass=ABCMeta):
     @abstractmethod
-    def get_content_representations(self, data, context: RequestResponse):
+    def get_content_representations(self, data, context: LogReport):
         pass
 
 

@@ -1,8 +1,7 @@
 import copy
-import xml.etree.ElementTree as etree
-import sys
 import re
-
+import sys
+import xml.etree.ElementTree as etree
 
 method_name_re = re.compile(r'^[a-zA-Z0-9_]+$')
 number_re = re.compile(r'^[0-9]+(\.[0-9]+)?$')

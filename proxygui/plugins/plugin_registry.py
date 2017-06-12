@@ -1,5 +1,5 @@
 from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 from proxygui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, \
     SettingsPlugin
 
@@ -38,19 +38,19 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugi
                     result = content
         return result
 
-    def filter_accepts_row(self, data: RequestResponse):
+    def filter_accepts_row(self, data: LogReport):
         for plugin in self.__plugins:
             if isinstance(plugin, GridPlugin):
                 if not plugin.filter_accepts_row(data):
                     return False
         return True
 
-    def get_content_representations(self, data: HttpMessage, context: RequestResponse):
+    def get_content_representations(self, data: HttpMessage, context: LogReport):
         for plugin in self.__plugins:
             if isinstance(plugin, ContentViewPlugin):
                 yield from plugin.get_content_representations(data, context)
 
-    def get_tabs(self, data: RequestResponse):
+    def get_tabs(self, data: LogReport):
         for plugin in self.__plugins:
             if isinstance(plugin, TabPlugin):
                 yield from plugin.get_tabs(data)

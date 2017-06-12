@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QLabel
 from hexdump import hexdump
 
 from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
 from proxygui.widgets.body_content_viewer import BodyContentViewer
 
@@ -35,7 +35,7 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
             yield lambda state: self.__build_headers_tab(rr.response, state), "Response head"
             yield lambda state: self.__build_body_tab(rr.response, rr, state), "Response body"
 
-    def get_content_representations(self, data: HttpMessage, context: RequestResponse):
+    def get_content_representations(self, data: HttpMessage, context: LogReport):
         if data.is_text():
             yield ("Text", self.text_representation)
         if b"text/html" in data.get_content_type():
@@ -72,7 +72,7 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
         headers.setReadOnly(True)
         return headers
 
-    def __build_body_tab(self, message: HttpMessage, context: RequestResponse, state):
+    def __build_body_tab(self, message: HttpMessage, context: LogReport, state):
         if message and message.has_body():
             body = BodyContentViewer(self.plugin_registry, message, context, state)
         else:

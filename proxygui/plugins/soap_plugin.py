@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineE
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
 
 from proxy.parser.http_parser import HttpMessage, HttpRequest
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import LogReport
 from proxy.utils import soap2python
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
 
@@ -42,18 +42,18 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
             except Exception as ex:
                 return str(ex)
 
-    def filter_accepts_row(self, data: RequestResponse):
+    def filter_accepts_row(self, data: LogReport):
         if not self.__is_soap(data.request):
             return not self.filter_non_soap_traffic
 
         method = self.__get_method(data.request)
         return method not in self.filter_methods
 
-    def get_content_representations(self, data: HttpMessage, context: RequestResponse):
+    def get_content_representations(self, data: HttpMessage, context: LogReport):
         if self.__is_soap(data):
             yield ("SOAP", self.soap_representation)
 
-    def soap_representation(self, data: HttpMessage, context: RequestResponse, parent_widget):
+    def soap_representation(self, data: HttpMessage, context: LogReport, parent_widget):
         body = QPlainTextEdit(parent_widget)
         font = QFont("Courier")
         font.setStyleHint(QFont.Monospace)
