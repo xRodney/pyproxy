@@ -136,7 +136,7 @@ class Endpoint:
 
 
 class InputEndpoint(Endpoint):
-    def __init__(self, name: str, reader, writer, connection_string, processor, listener):
+    def __init__(self, name: str, reader, writer, connection_string, processor, listener=None):
         super().__init__(name, reader, writer, connection_string)
         self.processor = processor
         self.listener = listener
