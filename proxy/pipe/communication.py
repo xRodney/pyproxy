@@ -78,7 +78,7 @@ class MessagePairer:
 
 class MessageListener:
     def on_request_response(self, request_response: RequestResponse):
-        print(request_response)
+        pass
 
     def on_error(self, error):
         print(error)
@@ -87,6 +87,14 @@ class MessageListener:
         for endpoint, rr in log.items():
             print("====== {} =====".format(endpoint))
             print(rr)
+
+        if "remote" in log:
+            merged = RequestResponse(log["remote"].request, log["local"].response)
+        else:
+            merged = RequestResponse(log["local"].request, log["local"].response)
+
+        merged.guid = log["local"].guid
+        self.on_request_response(merged)
 
 
 class Endpoint:
