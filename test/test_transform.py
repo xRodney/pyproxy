@@ -1,22 +1,25 @@
-from proxy.parser import http_parser
-
 import pytest
-from proxy.parser.http_parser import HttpResponse
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.recipe.transform import Proxy, PassThroughMessage, RequestResponseMessage
 
+from proxy.parser import http_parser
+from proxy.parser.http_parser import HttpResponse, HttpRequest
+from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe import default_recipe
+from proxy.pipe.apipe import ProxyParameters
+from proxy.pipe.communication import Processing, ProcessingFinishedError
 from proxy.pipe.recipe.matchers import has_method
+from proxy.pipe.recipe.transform import Proxy
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
 
 @pytest.fixture
 def simple_get_request():
-    msg = b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n"
-    parser = intialize_parser(http_parser.get_http_request)
-    return list(parse(parser, msg))[0]
+    return HttpRequest(b"GET", b"/", headers={b"Host": b"localhost"})
+
+
+@pytest.fixture
+def response_302():
+    return HttpResponse(b"302", b"Found", headers={b"Location": b"http://remotehost.com"})
 
 
 @pytest.fixture
@@ -26,89 +29,78 @@ def simple_delete_request():
     return list(parse(parser, msg))[0]
 
 
-def responder_200(request):
-    response = HttpResponse()
-    response.status = b"200"
-    response.status_message = b"OK"
-    response.body = b"This is body"
-    return response
+def test_default_recipe(simple_get_request, response_302):
+    flow = Proxy(PARAMETERS)
+    default_recipe.recipe(flow)
 
+    processing = Processing("local", flow(simple_get_request))
 
-def responder_404(request):
-    response = HttpResponse()
-    response.status = b"404"
-    response.status_message = b"Not found"
-    response.body = b"Not found"
-    return response
+    target_endpoint, request = processing.send_message(None)
 
-def get_results(processor, request, response):
-    processing = processor(request)
-    result1 = next(processing)
-    try:
-        processing.send(response)
-    except StopIteration as e:
-        return result1, e.value
+    assert target_endpoint == "remote"
+    assert request is not None
+    assert request.headers[b"Host"] == b"remotehost.com"
 
+    target_endpoint, response = processing.send_message(response_302)
 
-def test_default_recipe(simple_get_request):
-    processor = Proxy(PARAMETERS)
-    default_recipe.recipe(processor)
+    assert target_endpoint == "local"
+    assert response is not None
+    assert response.headers[b"Location"] == b"http://localhost"
 
-    response = HttpResponse()
-    result1, result2 = get_results(processor, simple_get_request, response)
-
-    assert result1 is not None
-    assert isinstance(result1, PassThroughMessage)
-    assert result1.request.headers[b"Host"] == b"remotehost.com"
-
-    assert result2 is response
+    with pytest.raises(ProcessingFinishedError):
+        processing.send_message(HttpResponse())
 
 
 def test_pass_through(simple_get_request):
-    processor = Proxy(PARAMETERS)
-    processor.then_pass_through()
+    flow = Proxy(PARAMETERS)
+    flow.then_pass_through()
 
-    response = HttpResponse()
-    result1, result2 = get_results(processor, simple_get_request, response)
+    processing = Processing("local", flow(simple_get_request))
 
-    assert result1 is not None
-    assert isinstance(result1, PassThroughMessage)
+    target_endpoint, request = processing.send_message(None)
 
-    assert result2 is response
+    assert target_endpoint == "remote"
+    assert request is simple_get_request
+
+    target_endpoint, response = processing.send_message(response_302)
+
+    assert target_endpoint == "local"
+    assert response is response_302
+
+    with pytest.raises(ProcessingFinishedError):
+        processing.send_message(HttpResponse())
 
 
 def test_respond(simple_get_request):
-    processor = Proxy(PARAMETERS)
-    processor.then_respond(responder_200)
+    flow = Proxy(PARAMETERS)
+    flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
-    response = HttpResponse()
-    result1, result2 = get_results(processor, simple_get_request, response)
-    assert result2 is response
+    processing = Processing("local", flow(simple_get_request))
 
-    assert result1 is not None
-    assert isinstance(result1, RequestResponseMessage)
-    assert result1.request is simple_get_request
-    assert result1.response.status == b"200"
+    target_endpoint, response = processing.send_message(None)
 
+    assert target_endpoint == "local"
+    assert response is not None
+    assert isinstance(response, HttpResponse)
+    assert response.status == b"200"
+
+    with pytest.raises(ProcessingFinishedError):
+        processing.send_message(HttpResponse())
 
 
 def test_has_method(simple_get_request, simple_delete_request):
-    processor = Proxy(PARAMETERS)
-    processor.when(has_method(b"GET")).then_respond(responder_200)
-    processor.when(has_method(b"DELETE")).then_respond(responder_404)
+    flow = Proxy(PARAMETERS)
+    flow.when(has_method(b"GET")).then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
+    flow.when(has_method(b"DELETE")).then_respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
 
-    result1, result2 = get_results(processor, simple_get_request, None)
-    assert result1 is not None
-    assert isinstance(result1, RequestResponseMessage)
-    assert result1.request is simple_get_request
-    assert result1.response.status == b"200"
+    processing1 = Processing("local", flow(simple_get_request))
+    target_endpoint, response1 = processing1.send_message(None)
 
-    assert result2 is None
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
 
-    result1, result2 = get_results(processor, simple_delete_request, None)
-    assert result1 is not None
-    assert isinstance(result1, RequestResponseMessage)
-    assert result1.request is simple_delete_request
-    assert result1.response.status == b"404"
+    processing2 = Processing("local", flow(simple_delete_request))
+    target_endpoint, response2 = processing2.send_message(None)
 
-    assert result2 is None
+    assert target_endpoint == "local"
+    assert response2.status == b"404"

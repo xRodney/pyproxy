@@ -26,26 +26,6 @@ class DefaultTransform(Transform):
     def remote_address_without_port(self, parameters):
         return self.__get_address(parameters.remote_address)
 
-    def replace_local_with_remote(self, input: bytes, parameters):
-        s = input
-        s = s.replace(self.local_address_with_port(parameters), self.remote_address_with_port(parameters))
-        s = s.replace(self.local_address_without_port(parameters), self.remote_address_without_port(parameters))
-        return s
-
-    def replace_remote_with_local(self, input: bytes, parameters):
-        s = input
-        s = s.replace(self.remote_address_with_port(parameters), self.local_address_with_port(parameters))
-        s = s.replace(self.remote_address_without_port(parameters), self.local_address_without_port(parameters))
-        return s
-
-    def replace_local_with_remote_in_header(self, msg, header, parameters):
-        if msg.headers.get(header):
-            msg.headers[header] = self.replace_local_with_remote(msg.headers[header], parameters)
-
-    def replace_remote_with_local_in_header(self, msg, header, parameters):
-        if msg.headers.get(header):
-            msg.headers[header] = self.replace_remote_with_local(msg.headers[header], parameters)
-
     def process_message(self, msg, parameters):
         # self.replace_local_with_remote_in_header(msg, b"Host", parameters)
         # self.replace_local_with_remote_in_header(msg, b"Referer", parameters)
@@ -58,18 +38,27 @@ class DefaultTransform(Transform):
         return msg
 
     def transform_response(self, request, response, original_request, proxy: Proxy) -> HttpResponse:
-        if request.headers.get(b"X-Original-Host"):
-            if response.headers.get(b"Location"):
-                response.headers[b"Location"] = \
-                    response.headers[b"Location"].replace(
-                        request.headers[b"Host"], request.headers[b"X-Original-Host"])
+        self.replace_host_in_response_header(request, response, b"Location")
+        self.replace_host_in_response_header(request, response, b"Referer")
 
         return self.process_message(response, proxy.parameters)
+
+    def replace_host_in_response_header(self, request, response, header_name):
+        original_host = request.headers.get(b"X-Original-Host")
+        host = request.headers.get(b"Host")
+
+        header = response.headers.get(header_name)
+
+        if original_host and host and header:
+            response.headers[header_name] = header.replace(host, original_host)
 
     def transform_request(self, request: HttpRequest, proxy: Proxy) -> HttpRequest:
         if request.headers.get(b"Host"):
             request.headers[b"X-Original-Host"] = request.headers[b"Host"]
-            request.headers[b"Host"] = self.remote_address_with_port(proxy.parameters)
+            if proxy.parameters.remote_port == 80:
+                request.headers[b"Host"] = self.remote_address_without_port(proxy.parameters)
+            else:
+                request.headers[b"Host"] = self.remote_address_with_port(proxy.parameters)
 
         return self.process_message(request, proxy.parameters)
 

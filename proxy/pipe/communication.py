@@ -190,6 +190,10 @@ class Dispatcher:
         await endpoint.read_loop(_dispatch)
 
 
+class ProcessingFinishedError(ValueError):
+    pass
+
+
 class Processing:
     def __init__(self, source_endpoint, flow):
         self.source_endpoint = source_endpoint
@@ -197,7 +201,7 @@ class Processing:
 
     def send_message(self, message):
         if self.has_finished():
-            raise ValueError("Flow has already finished")
+            raise ProcessingFinishedError("Flow has already finished")
 
         try:
             return self.flow.send(message)
