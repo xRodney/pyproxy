@@ -47,9 +47,9 @@ class DefaultTransform(Transform):
             msg.headers[header] = self.replace_remote_with_local(msg.headers[header], parameters)
 
     def process_message(self, msg, parameters):
-        self.replace_local_with_remote_in_header(msg, b"Host", parameters)
-        self.replace_local_with_remote_in_header(msg, b"Referer", parameters)
-        self.replace_remote_with_local_in_header(msg, b"Location", parameters)
+        # self.replace_local_with_remote_in_header(msg, b"Host", parameters)
+        # self.replace_local_with_remote_in_header(msg, b"Referer", parameters)
+        # self.replace_remote_with_local_in_header(msg, b"Location", parameters)
 
         if msg.headers.get(b"Transfer-Encoding", "") == b"chunked":
             del msg.headers[b"Transfer-Encoding"]
@@ -57,12 +57,30 @@ class DefaultTransform(Transform):
 
         return msg
 
-    def transform_response(self, response: HttpResponse, proxy: Proxy) -> HttpResponse:
+    def transform_response(self, request, response, original_request, proxy: Proxy) -> HttpResponse:
+        if request.headers.get(b"X-Original-Host"):
+            if response.headers.get(b"Location"):
+                response.headers[b"Location"] = \
+                    response.headers[b"Location"].replace(
+                        request.headers[b"Host"], request.headers[b"X-Original-Host"])
+
         return self.process_message(response, proxy.parameters)
 
     def transform_request(self, request: HttpRequest, proxy: Proxy) -> HttpRequest:
+        if request.headers.get(b"Host"):
+            request.headers[b"X-Original-Host"] = request.headers[b"Host"]
+            request.headers[b"Host"] = self.remote_address_with_port(proxy.parameters)
+
         return self.process_message(request, proxy.parameters)
 
 
 def recipe(proxy: Proxy):
+    def respond_404(request: HttpRequest):
+        response = HttpResponse()
+        response.status = b"404"
+        response.status_message = b"Nenalezeno bla bla"
+        response.body = b"Zkus hledat jinde"
+        return response
+
+    proxy.when(lambda request: b"asset" in request.path).then_respond(respond_404)
     proxy.transform(DefaultTransform()).then_pass_through()

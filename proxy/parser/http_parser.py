@@ -7,9 +7,9 @@ CRLF = "\r\n"
 
 
 class HttpMessage:
-    def __init__(self, body=None):
+    def __init__(self, body=None, headers=None):
         self.version = b"HTTP/1.1"
-        self.headers = OrderedDict()
+        self.headers = OrderedDict(**headers) if headers else OrderedDict()
         self.body = body
         self.__body_as_text = None
 
@@ -81,8 +81,8 @@ class HttpMessage:
 
 
 class HttpRequest(HttpMessage):
-    def __init__(self, method=None, path=None, body=None):
-        super().__init__(body=body)
+    def __init__(self, method=None, path=None, body=None, headers=None):
+        super().__init__(body=body, headers=headers)
         self.method = method
         self.path = path
 
@@ -94,8 +94,8 @@ class HttpRequest(HttpMessage):
 
 
 class HttpResponse(HttpMessage):
-    def __init__(self, status=None, status_message=None, body=None):
-        super().__init__(body=body)
+    def __init__(self, status=None, status_message=None, body=None, headers=None):
+        super().__init__(body=body, headers=headers)
         self.status = status
         self.status_message = status_message
 

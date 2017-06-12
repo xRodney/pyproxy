@@ -1,9 +1,15 @@
+import asyncio
 import collections
 import uuid
 
 from typing import Union
 
+from proxy.parser import http_parser
 from proxy.parser.http_parser import HttpRequest, HttpResponse, HttpMessage
+from proxy.parser.parser_utils import intialize_parser, parse
+from proxy.pipe.logger import logger
+
+BUFFER_SIZE = 65536
 
 
 class RequestResponse:
@@ -78,14 +84,35 @@ class MessageListener:
 
 
 class Endpoint:
-    def __init__(self, name: str, writer):
+    def __init__(self, name: str, reader, writer, connection_string):
         self.name = name
+        self.reader = reader
         self.writer = writer
+        self.connection_string = connection_string
 
     async def _write_message(self, message: HttpMessage):
         for data in message.to_bytes():
             self.writer.write(data)
         await self.writer.drain()
+
+    async def read_loop(self, async_callback):
+        try:
+            parser = intialize_parser(http_parser.get_http_request)
+            while True:
+                data = await self.reader.read(BUFFER_SIZE)
+
+                for msg in parse(parser, data):
+                    await async_callback(msg)
+
+                if not data:
+                    break
+        except Exception as e:
+            logger.info('proxy_task exception {}'.format(e))
+            raise
+
+    def close(self):
+        self.writer.close()
+        logger.info('close connection {}'.format(self.connection_string))
 
     async def on_received(self, message: HttpMessage):
         pass
@@ -95,8 +122,8 @@ class Endpoint:
 
 
 class InputEndpoint(Endpoint):
-    def __init__(self, name: str, writer, processor):
-        super().__init__(name, writer)
+    def __init__(self, name: str, reader, writer, connection_string, processor):
+        super().__init__(name, reader, writer, connection_string)
         self.processor = processor
 
     async def on_received(self, message: HttpMessage):
@@ -110,8 +137,8 @@ class InputEndpoint(Endpoint):
 
 
 class OutputEndpoint(Endpoint):
-    def __init__(self, name: str, writer):
-        super().__init__(name, writer)
+    def __init__(self, name: str, reader, writer, connection_string):
+        super().__init__(name, reader, writer, connection_string)
         self.pending_processsings = collections.deque()
 
     async def send(self, message: HttpMessage, processing):
@@ -130,6 +157,7 @@ class Dispatcher:
         self.endpoints = {}
 
     def add_endpoint(self, endpoint: Endpoint):
+        endpoint.dispatcher = self
         self.endpoints[endpoint.name] = endpoint
 
     async def dispatch(self, source_endpoint: Union[str, Endpoint], received_message: HttpMessage):
@@ -142,6 +170,24 @@ class Dispatcher:
             target_endpoint = self.endpoints[target_endpoint]
 
         await target_endpoint.send(message_to_send, processing)
+
+    async def loop(self):
+        futures = []
+
+        for endpoint in self.endpoints.values():
+            futures.append(asyncio.ensure_future(self.__loop1(endpoint)))
+
+        try:
+            await asyncio.gather(*futures, return_exceptions=True)
+        finally:
+            for endpoint in self.endpoints.values():
+                endpoint.close()
+
+    async def __loop1(self, endpoint):
+        async def _dispatch(message):
+            await self.dispatch(endpoint, message)
+
+        await endpoint.read_loop(_dispatch)
 
 
 class Processing:

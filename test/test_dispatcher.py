@@ -18,6 +18,24 @@ class TestWriter:
     async def drain(self):
         pass
 
+    def close(self):
+        pass
+
+
+class TestReader:
+    """
+    Dummy for asyncio Reader.
+    """
+
+    def __init__(self, data):
+        self.data = data
+        self.pos = 0
+
+    async def read(self, len):
+        pos1 = self.pos
+        self.pos += len
+        return self.data[pos1:self.pos]
+
 
 @pytest.mark.asyncio
 async def test_dispatcher():
@@ -27,9 +45,9 @@ async def test_dispatcher():
 
         return HttpResponse(b"200", b"OK", response1.body + response2.body)
 
-    input_endpoint = InputEndpoint("input", TestWriter(), sample_flow)
-    first_endpoint = OutputEndpoint("first", TestWriter())
-    second_endpoint = OutputEndpoint("second", TestWriter())
+    input_endpoint = InputEndpoint("input", None, TestWriter(), "", sample_flow)
+    first_endpoint = OutputEndpoint("first", None, TestWriter(), "")
+    second_endpoint = OutputEndpoint("second", None, TestWriter(), "")
 
     dispatcher = Dispatcher()
     dispatcher.add_endpoint(input_endpoint)
@@ -61,8 +79,8 @@ async def test_two_flows():
 
         return HttpResponse(b"200", b"OK", response1.body)
 
-    input_endpoint = InputEndpoint("input", TestWriter(), sample_flow)
-    output_endpoint = OutputEndpoint("output", TestWriter())
+    input_endpoint = InputEndpoint("input", None, TestWriter(), "", sample_flow)
+    output_endpoint = OutputEndpoint("output", None, TestWriter(), "")
 
     dispatcher = Dispatcher()
     dispatcher.add_endpoint(input_endpoint)
@@ -80,3 +98,23 @@ async def test_two_flows():
     assert b"200 OK" in input_endpoint.writer.data
     assert b"response1" in input_endpoint.writer.data
     assert b"response2" in input_endpoint.writer.data
+
+
+@pytest.mark.asyncio
+async def test_loop():
+    request_bytes = b"".join(HttpRequest(b"GET", b"/sample/first", headers={b"X": b"y"}).to_bytes())
+    response = HttpResponse(b"200", b"OK", b"This is body")
+
+    def sample_flow(request):
+        yield from []  # needed as we need a generator that never yields
+        return response
+
+    input_endpoint = InputEndpoint("input", TestReader(request_bytes), TestWriter(), "", sample_flow)
+
+    dispatcher = Dispatcher()
+    dispatcher.add_endpoint(input_endpoint)
+
+    await dispatcher.loop()
+
+    response_bytes = b"".join(response.to_bytes())
+    assert input_endpoint.writer.data == response_bytes

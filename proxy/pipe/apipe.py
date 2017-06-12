@@ -3,15 +3,13 @@
 # Based on https://github.com/aaronriekenberg/asyncioproxy/blob/master/proxy.py
 
 import asyncio
-import logging
 import sys
 import threading
 from threading import Thread
 
-from proxy.parser import http_parser
-from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe import default_recipe
 from proxy.pipe.communication import MessageListener, InputEndpoint, OutputEndpoint, Dispatcher
+from proxy.pipe.logger import logger
 from proxy.pipe.recipe.transform import Proxy
 
 BUFFER_SIZE = 65536
@@ -26,25 +24,6 @@ class ProxyParameters():
         self.remote_port = remote_port
 
 
-def create_logger():
-    logger = logging.getLogger('proxy')
-    logger.setLevel(logging.INFO)
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        '%(asctime)s - %(threadName)s - %(message)s')
-    consoleHandler.setFormatter(formatter)
-
-    logger.addHandler(consoleHandler)
-
-    return logger
-
-
-logger = create_logger()
-
-
 def client_connection_string(writer):
     return '{} -> {}'.format(
         writer.get_extra_info('peername'),
@@ -55,31 +34,6 @@ def remote_connection_string(writer):
     return '{} -> {}'.format(
         writer.get_extra_info('sockname'),
         writer.get_extra_info('peername'))
-
-
-async def write_message(msg, writer):
-    for data in msg.to_bytes():
-        writer.write(data)
-    await writer.drain()
-
-
-async def proxy_data(reader, writer, endpoint_name, dispatcher, connection_string):
-    try:
-        parser = intialize_parser(http_parser.get_http_request)
-        while True:
-            data = await reader.read(BUFFER_SIZE)
-
-            for msg in parse(parser, data):
-                await dispatcher.dispatch(endpoint_name, msg)
-
-            if not data:
-                break
-    except Exception as e:
-        logger.info('proxy_task exception {}'.format(e))
-        raise
-    finally:
-        writer.close()
-        logger.info('close connection {}'.format(connection_string))
 
 
 async def accept_client(client_reader, client_writer, proxy_parameters, listener):
@@ -105,11 +59,10 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         default_recipe.recipe(processor)
 
         dispatcher = Dispatcher()
-        dispatcher.add_endpoint(InputEndpoint("local", client_writer, processor))
-        dispatcher.add_endpoint(OutputEndpoint("remote", remote_writer))
+        dispatcher.add_endpoint(InputEndpoint("local", client_reader, client_writer, client_string))
+        dispatcher.add_endpoint(OutputEndpoint("remote", remote_reader, remote_writer, remote_string))
 
-        asyncio.ensure_future(proxy_data(client_reader, remote_writer, "local", dispatcher, client_string))
-        asyncio.ensure_future(proxy_data(remote_reader, client_writer, "remote", dispatcher, remote_string))
+        await dispatcher.loop()
 
 
 def parse_addr_port_string(addr_port_string):
