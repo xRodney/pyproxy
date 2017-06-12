@@ -55,11 +55,11 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
 
-        processor = Proxy(proxy_parameters)
-        default_recipe.recipe(processor)
+        flow = Proxy(proxy_parameters)
+        default_recipe.recipe(flow)
 
         dispatcher = Dispatcher()
-        dispatcher.add_endpoint(InputEndpoint("local", client_reader, client_writer, client_string))
+        dispatcher.add_endpoint(InputEndpoint("local", client_reader, client_writer, client_string, flow, listener))
         dispatcher.add_endpoint(OutputEndpoint("remote", remote_reader, remote_writer, remote_string))
 
         await dispatcher.loop()

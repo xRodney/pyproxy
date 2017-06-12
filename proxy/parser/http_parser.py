@@ -49,6 +49,8 @@ class HttpMessage:
     def to_bytes(self):
         data = self.first_line()
         yield data
+        if self.body and not self.has_body() and b"Content-Length" not in self.headers:
+            self.headers[b"Content-Length"] = len(self.body)
         for name, value in self.headers.items():
             yield b"%s: %s\r\n" % (name, value)
         yield b"\r\n"

@@ -71,5 +71,5 @@ def recipe(proxy: Proxy):
         response.body = b"Zkus hledat jinde"
         return response
 
-    proxy.when(lambda request: b"asset" in request.path).then_respond(respond_404)
+    # proxy.when(lambda request: b"asset" in request.path).then_respond(respond_404)
     proxy.transform(DefaultTransform()).then_pass_through()

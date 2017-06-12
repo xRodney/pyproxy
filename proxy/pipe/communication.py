@@ -1,6 +1,7 @@
 import asyncio
 import collections
 import uuid
+from collections import OrderedDict
 
 from typing import Union
 
@@ -82,6 +83,11 @@ class MessageListener:
     def on_error(self, error):
         print(error)
 
+    def on_any_message(self, log):
+        for endpoint, rr in log.items():
+            print("====== {} =====".format(endpoint))
+            print(rr)
+
 
 class Endpoint:
     def __init__(self, name: str, reader, writer, connection_string):
@@ -122,17 +128,20 @@ class Endpoint:
 
 
 class InputEndpoint(Endpoint):
-    def __init__(self, name: str, reader, writer, connection_string, processor):
+    def __init__(self, name: str, reader, writer, connection_string, processor, listener):
         super().__init__(name, reader, writer, connection_string)
         self.processor = processor
+        self.listener = listener
 
     async def on_received(self, message: HttpMessage):
         flow = self.processor(message)
-        processing = Processing(self.name, flow)
+        processing = Processing(self.name, flow, listener=self.listener)
+        processing.log_request(self.name, message)
         endpoint_name, message = processing.send_message(None)
         return processing, endpoint_name, message
 
     async def send(self, message: HttpMessage, processing):
+        processing.log_response(self.name, message)
         await self._write_message(message)
 
 
@@ -143,11 +152,13 @@ class OutputEndpoint(Endpoint):
 
     async def send(self, message: HttpMessage, processing):
         self.pending_processsings.append(processing)
+        processing.log_request(self.name, message)
         await self._write_message(message)
 
     async def on_received(self, message: HttpMessage):
         assert len(self.pending_processsings) > 0, "Response without a request"
         processing = self.pending_processsings.popleft()
+        processing.log_response(self.name, message)
         endpoint_name, message = processing.send_message(message)
         return processing, endpoint_name, message
 
@@ -195,9 +206,11 @@ class ProcessingFinishedError(ValueError):
 
 
 class Processing:
-    def __init__(self, source_endpoint, flow):
+    def __init__(self, source_endpoint, flow, listener: MessageListener = None):
         self.source_endpoint = source_endpoint
         self.flow = flow
+        self.log = OrderedDict()
+        self.listener = listener
 
     def send_message(self, message):
         if self.has_finished():
@@ -211,3 +224,15 @@ class Processing:
 
     def has_finished(self):
         return self.flow is None
+
+    def log_request(self, endpoint_name, message):
+        self.log.setdefault(endpoint_name, RequestResponse())
+        self.log[endpoint_name].request = message
+        if self.listener:
+            self.listener.on_any_message(self.log)
+
+    def log_response(self, endpoint_name, message):
+        self.log.setdefault(endpoint_name, RequestResponse())
+        self.log[endpoint_name].response = message
+        if self.listener:
+            self.listener.on_any_message(self.log)
