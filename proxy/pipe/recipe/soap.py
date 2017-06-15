@@ -68,7 +68,7 @@ class SoapMatches(BaseMatcher):
     @staticmethod
     def suds_object_matches(pattern, item, strict):
         for key, value in suds.sudsobject.items(pattern):
-            if value is None and strict:
+            if value is None and not strict:
                 continue
 
             try:

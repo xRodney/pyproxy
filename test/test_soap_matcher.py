@@ -76,15 +76,8 @@ def test_soap():
     client = suds.client.Client("http://www.webservicex.net/CurrencyConvertor.asmx?WSDL")
     factory = client.factory
 
-    pattern = factory.create("ConversionRate")
-    pattern.FromCurrency = factory.create("Currency")
-    pattern.FromCurrency.value = "USD"
-
-    request = factory.create("ConversionRate")
-    pattern.FromCurrency = factory.create("Currency")
-    pattern.FromCurrency.value = "USD"
-    request.ToCurrency = factory.create("Currency")
-    pattern.ToCurrency.value = "GBP"
+    pattern = factory.ConversionRate(FromCurrency="USD")
+    request = factory.ConversionRate(FromCurrency="USD", ToCurrency = "GBP")
 
     assert SoapMatches.object_matches(pattern, request, strict=False)
     assert not SoapMatches.object_matches(pattern, request, strict=True)
