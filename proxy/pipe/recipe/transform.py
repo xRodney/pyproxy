@@ -67,6 +67,9 @@ class Proxy:
         self.__branches.append(flow)
         return self
 
+    def respond_when(self, matcher):
+        return self.when(matcher).then_respond
+
 
 class GuardedProxy(Proxy):
     def __init__(self, parameters, guard):
