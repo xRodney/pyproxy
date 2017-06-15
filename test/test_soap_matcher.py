@@ -1,3 +1,4 @@
+import suds
 from hamcrest import greater_than
 
 from proxy.pipe.recipe.soap import SoapMatches
@@ -69,3 +70,21 @@ def test_combined_matchers():
     assert SoapMatches.object_matches({"first": greater_than(0)},
                                       {"first": 1, "list": ['a', 'b']},
                                       strict=False)
+
+
+def test_soap():
+    client = suds.client.Client("http://www.webservicex.net/CurrencyConvertor.asmx?WSDL")
+    factory = client.factory
+
+    pattern = factory.create("ConversionRate")
+    pattern.FromCurrency = factory.create("Currency")
+    pattern.FromCurrency.value = "USD"
+
+    request = factory.create("ConversionRate")
+    pattern.FromCurrency = factory.create("Currency")
+    pattern.FromCurrency.value = "USD"
+    request.ToCurrency = factory.create("Currency")
+    pattern.ToCurrency.value = "GBP"
+
+    assert SoapMatches.object_matches(pattern, request, strict=False)
+    assert not SoapMatches.object_matches(pattern, request, strict=True)

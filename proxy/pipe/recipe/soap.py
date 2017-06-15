@@ -1,3 +1,4 @@
+import suds.sudsobject
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest.core.matcher import Matcher
 
@@ -27,6 +28,8 @@ class SoapMatches(BaseMatcher):
             return SoapMatches.list_matches(pattern, item, strict)
         elif isinstance(pattern, dict):
             return SoapMatches.dict_matches(pattern, item, strict)
+        elif isinstance(pattern, suds.sudsobject.Object):
+            return SoapMatches.suds_object_matches(pattern, item, strict)
         elif isinstance(pattern, Matcher):
             return pattern.matches(item)
         elif callable(pattern):
@@ -58,6 +61,22 @@ class SoapMatches(BaseMatcher):
 
         for key, value in pattern.items():
             if not SoapMatches.object_matches(value, item[key], strict):
+                return False
+
+        return True
+
+    @staticmethod
+    def suds_object_matches(pattern, item, strict):
+        for key, value in suds.sudsobject.items(pattern):
+            if value is None and strict:
+                continue
+
+            try:
+                item_value = getattr(item, key)
+            except AttributeError:
+                return False
+
+            if not SoapMatches.object_matches(value, item_value, strict):
                 return False
 
         return True
