@@ -1,13 +1,52 @@
-import suds.sudsobject
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest.core.matcher import Matcher
 
-from proxy.pipe.recipe.transform import Transform
+import suds.sudsobject
+from proxy.parser.http_parser import HttpResponse
+from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
+from proxy.pipe.recipe.transform import Transform, Proxy
 
 
 class SoapTransform(Transform):
     def __init__(self, client):
         self.client = client
+        self.binding = ServerDocumentBinding(self.client.wsdl)
+
+    def __is_soap(self, request):
+        return b"soap" in request.get_content_type() or (
+            b"xml" in request.get_content_type() and "schemas.xmlsoap.org" in request.body_as_text())
+
+    def transform_request(self, request, proxy: "Proxy"):
+        if not self.__is_soap(request):
+            return None
+
+        text = request.body_as_text()
+
+        messageroot, soapbody = self.binding.read_message(text)
+
+        method_elem = soapbody.children[0]
+        selector = getattr(self.client.service, method_elem.name)
+        if len(selector.methods) > 1:
+            arguments = [child.name for child in method_elem.children]
+            selector = selector.accepting_args(*arguments)
+
+        method = selector.method
+
+        xml, soap = self.binding.parse_message(method, messageroot, soapbody, input=True)
+
+        soap.__method = method
+
+        return soap
+
+    def transform_response(self, request, response, original_request, proxy: "Proxy"):
+        http_response = HttpResponse(b"200", b"OK")
+
+        xml = self.binding.write_reply(request.__method, response)
+        http_response.body = xml.str().encode()
+
+        http_response.headers[b'Content-Type'] = b'text/xml; charset=utf-8'
+        http_response.headers[b'Content-Length'] = str((len(http_response.body))).encode()
+        return http_response
 
 
 def soap_transform(client):

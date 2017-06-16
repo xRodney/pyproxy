@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="DuckService2" targetNamespace="http://example.com/duck/"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:tns="http://example.com/duck/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://example.com/duck/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                   elementFormDefault="qualified" targetNamespace="http://example.com/duck/" version="1.0">
+
+            <xs:element name="Duck" type="tns:duck"/>
+
+            <xs:element name="duckAdd" type="tns:duckAdd"/>
+
+            <xs:element name="duckAddResponse" type="tns:duckAddResponse"/>
+
+            <xs:element name="T_KeyPair" type="tns:tKeyPair"/>
+
+            <xs:element name="duckList" type="tns:duckList"/>
+
+            <xs:element name="duckListResponse" type="tns:duckListResponse"/>
+
+            <xs:complexType name="tKeyPair">
+                <xs:sequence>
+                    <xs:element name="key" type="xs:string"/>
+                    <xs:element name="value" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="duckAdd">
+                <xs:sequence>
+                    <xs:element name="username" type="xs:string"/>
+                    <xs:element name="password" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" name="settings" type="tns:tKeyPair"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="duckAddResponse">
+                <xs:sequence>
+                    <xs:element name="return" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="duckList">
+                <xs:sequence>
+                    <xs:element name="username" type="xs:string"/>
+                    <xs:element name="password" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" name="settings" type="tns:tKeyPair"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="duckListResponse">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="return" type="tns:duck"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="duck">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="info" nillable="true" type="tns:tKeyPair"/>
+                </xs:sequence>
+            </xs:complexType>
+
+        </xs:schema>
+    </wsdl:types>
+
+    <wsdl:message name="duckAdd">
+        <wsdl:part name="parameters" element="tns:duckAdd">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="PSACredentialsValidate">
+        <wsdl:part name="parameters" element="tns:PSACredentialsValidate">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="duckAddResponse">
+        <wsdl:part name="parameters" element="tns:duckAddResponse">
+        </wsdl:part>
+    </wsdl:message>
+
+    <wsdl:message name="duckListResponse">
+        <wsdl:part name="parameters" element="tns:duckListResponse">
+        </wsdl:part>
+    </wsdl:message>
+
+    <wsdl:message name="duckList">
+        <wsdl:part name="parameters" element="tns:duckList">
+        </wsdl:part>
+    </wsdl:message>
+
+    <wsdl:portType name="DuckService2">
+
+        <wsdl:operation name="duckAdd">
+            <wsdl:input name="duckAdd" message="tns:duckAdd">
+            </wsdl:input>
+            <wsdl:output name="duckAddResponse" message="tns:duckAddResponse">
+            </wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="duckList">
+            <wsdl:input name="duckList" message="tns:duckList">
+            </wsdl:input>
+            <wsdl:output name="duckListResponse" message="tns:duckListResponse">
+            </wsdl:output>
+        </wsdl:operation>
+
+    </wsdl:portType>
+
+
+    <wsdl:binding name="DuckService2SoapBinding" type="tns:DuckService2">
+        <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <wsdl:operation name="duckAdd">
+            <soap12:operation soapAction="" style="document"/>
+            <wsdl:input name="duckAdd">
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="duckAddResponse">
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="duckList">
+            <soap12:operation soapAction="" style="document"/>
+            <wsdl:input name="duckList">
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="duckListResponse">
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+
+    </wsdl:binding>
+    <wsdl:service name="DuckService2">
+        <wsdl:port name="DuckService2" binding="tns:DuckService2SoapBinding">
+            <soap12:address location="http://localhost/DuckService2"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
