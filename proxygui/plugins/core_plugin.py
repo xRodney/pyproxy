@@ -36,11 +36,12 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
             yield lambda state: self.__build_body_tab(rr.response, rr, state), "Response body"
 
     def get_content_representations(self, data: HttpMessage, context: LogReport):
-        if data.is_text():
-            yield ("Text", self.text_representation)
-        if b"text/html" in data.get_content_type():
-            yield ("HTML", self.html_representation)
-        yield ("Hex", self.hex_representation)
+        if data.has_body():
+            if data.is_text():
+                yield ("Text", self.text_representation)
+            if b"text/html" in data.get_content_type():
+                yield ("HTML", self.html_representation)
+            yield ("Hex", self.hex_representation)
 
     def text_representation(self, data: HttpMessage, context, parent_widget):
         body = QPlainTextEdit()
@@ -73,7 +74,7 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
         return headers
 
     def __build_body_tab(self, message: HttpMessage, context: LogReport, state):
-        if message and message.has_body():
+        if message:
             body = BodyContentViewer(self.plugin_registry, message, context, state)
         else:
             body = QLabel("No body")
