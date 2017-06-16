@@ -104,3 +104,17 @@ def test_has_method(simple_get_request, simple_delete_request):
 
     assert target_endpoint == "local"
     assert response2.status == b"404"
+
+
+def test_decorator_syntax(simple_get_request):
+    flow = Proxy(PARAMETERS)
+
+    @flow.respond_when(has_method(b"GET"))
+    def handle(request):
+        return HttpResponse(b"200", b"OK", b"This is body")
+
+    processing1 = Processing("local", flow(simple_get_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
