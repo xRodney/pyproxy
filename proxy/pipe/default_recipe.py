@@ -37,30 +37,33 @@ class DefaultTransform(Transform):
 
         return msg
 
-    def transform_response(self, request, response, original_request, proxy: Proxy) -> HttpResponse:
-        self.replace_host_in_response_header(request, response, b"Location")
-        self.replace_host_in_response_header(request, response, b"Referer")
-
-        return self.process_message(response, proxy.parameters)
-
-    def replace_host_in_response_header(self, request, response, header_name):
-        original_host = request.headers.get(b"X-Original-Host")
-        host = request.headers.get(b"Host")
-
+    def replace_host_in_response_header(self, response, original_host, new_host, header_name):
         header = response.headers.get(header_name)
 
-        if original_host and host and header:
-            response.headers[header_name] = header.replace(host, original_host)
+        if original_host and new_host and header:
+            response.headers[header_name] = header.replace(new_host, original_host)
 
-    def transform_request(self, request: HttpRequest, proxy: Proxy) -> HttpRequest:
+    def transform(self, request: HttpRequest, proxy: Proxy, next_in_chain) -> HttpRequest:
+        original_host = None
+        new_host = None
         if request.headers.get(b"Host"):
-            request.headers[b"X-Original-Host"] = request.headers[b"Host"]
             if proxy.parameters.remote_port == 80:
-                request.headers[b"Host"] = self.remote_address_without_port(proxy.parameters)
+                new_host = self.remote_address_without_port(proxy.parameters)
             else:
-                request.headers[b"Host"] = self.remote_address_with_port(proxy.parameters)
+                new_host = self.remote_address_with_port(proxy.parameters)
 
-        return self.process_message(request, proxy.parameters)
+            original_host = request.headers[b"Host"]
+            request.headers[b"Host"] = new_host
+
+        request = self.process_message(request, proxy.parameters)
+
+        response = yield from next_in_chain(request)
+
+        if original_host and new_host:
+            self.replace_host_in_response_header(response, original_host, new_host, b"Location")
+            self.replace_host_in_response_header(response, original_host, new_host, b"Referer")
+
+        return self.process_message(response, proxy.parameters)
 
 
 def recipe(proxy: Proxy):

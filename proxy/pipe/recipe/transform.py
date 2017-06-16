@@ -16,6 +16,17 @@ class Transform(object):
     def transform_response(self, request, response, original_request, proxy: "Proxy") -> HttpResponse:
         return response
 
+    def transform(self, request, proxy: "Proxy", next_in_chain):
+        new_request = self.transform_request(request, proxy)
+        if not new_request:
+            raise DoesNotAccept()
+
+        response = yield from next_in_chain(new_request)
+
+        response = self.transform_response(new_request, response, request, proxy)
+
+        return response
+
 
 class Proxy:
     def __init__(self, parameters):
@@ -89,12 +100,4 @@ class TransformingProxy(Proxy):
         self.__transform = transform
 
     def __call__(self, request: HttpRequest):
-        new_request = self.__transform.transform_request(request, self)
-        if not new_request:
-            raise DoesNotAccept()
-
-        response = yield from super().__call__(new_request)
-
-        response = self.__transform.transform_response(new_request, response, request, self)
-
-        return response
+        return self.__transform.transform(request, self, super().__call__)
