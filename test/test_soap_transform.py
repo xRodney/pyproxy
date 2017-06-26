@@ -6,7 +6,7 @@ from proxy.parser.http_parser import HttpRequest
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import Processing
 from proxy.pipe.recipe.soap import soap_transform
-from proxy.pipe.recipe.transform import Proxy
+from proxy.pipe.recipe.transform import Flow
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
@@ -39,7 +39,7 @@ request = HttpRequest(b'POST', b'/DuckService2',
 
 
 def test_soap_transform_request():
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
 
     realpath = os.path.realpath(__file__)
     dir = os.path.dirname(realpath)

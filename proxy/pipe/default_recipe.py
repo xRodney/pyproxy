@@ -1,6 +1,6 @@
 from proxy.parser.http_parser import HttpResponse, HttpRequest
 
-from proxy.pipe.recipe.transform import Proxy, Transform
+from proxy.pipe.recipe.transform import Flow, Transform
 
 
 class DefaultTransform(Transform):
@@ -43,7 +43,7 @@ class DefaultTransform(Transform):
         if original_host and new_host and header:
             response.headers[header_name] = header.replace(new_host, original_host)
 
-    def transform(self, request: HttpRequest, proxy: Proxy, next_in_chain) -> HttpRequest:
+    def transform(self, request: HttpRequest, proxy: Flow, next_in_chain) -> HttpRequest:
         original_host = None
         new_host = None
         if request.headers.get(b"Host"):
@@ -66,7 +66,7 @@ class DefaultTransform(Transform):
         return self.process_message(response, proxy.parameters)
 
 
-def recipe(proxy: Proxy):
+def recipe(proxy: Flow):
     def respond_404(request: HttpRequest):
         response = HttpResponse()
         response.status = b"404"

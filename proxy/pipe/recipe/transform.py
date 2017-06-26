@@ -10,13 +10,13 @@ class DoesNotAccept(Exception):
 
 
 class Transform(object):
-    def transform_request(self, request, proxy: "Proxy") -> HttpRequest:
+    def transform_request(self, request, proxy: "Flow") -> HttpRequest:
         return request
 
-    def transform_response(self, request, response, original_request, proxy: "Proxy") -> HttpResponse:
+    def transform_response(self, request, response, original_request, proxy: "Flow") -> HttpResponse:
         return response
 
-    def transform(self, request, proxy: "Proxy", next_in_chain):
+    def transform(self, request, proxy: "Flow", next_in_chain):
         new_request = self.transform_request(request, proxy)
         if not new_request:
             raise DoesNotAccept()
@@ -28,21 +28,21 @@ class Transform(object):
         return response
 
 
-class Proxy:
+class Flow:
     def __init__(self, parameters):
         self.__branches = []
         self.parameters = parameters
 
-    def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Proxy":
+    def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
         if callable(matcher):
             matcher = LambdaMatcher(matcher)
 
-        proxy = GuardedProxy(self.parameters, matcher)
+        proxy = GuardedFlow(self.parameters, matcher)
         self.__branches.append(proxy)
         return proxy
 
     def transform(self, transform: Transform):
-        proxy = TransformingProxy(self.parameters, transform)
+        proxy = TransformingFlow(self.parameters, transform)
         self.__branches.append(proxy)
         return proxy
 
@@ -82,7 +82,7 @@ class Proxy:
         return self.when(matcher).then_respond
 
 
-class GuardedProxy(Proxy):
+class GuardedFlow(Flow):
     def __init__(self, parameters, guard):
         super().__init__(parameters)
         self.__guard = guard
@@ -94,7 +94,7 @@ class GuardedProxy(Proxy):
         return super().__call__(request)
 
 
-class TransformingProxy(Proxy):
+class TransformingFlow(Flow):
     def __init__(self, parameters, transform):
         super().__init__(parameters)
         self.__transform = transform

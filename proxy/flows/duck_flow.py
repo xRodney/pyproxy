@@ -4,12 +4,12 @@ import suds
 import suds.sudsobject
 from proxy.pipe.recipe.matchers import has_path
 from proxy.pipe.recipe.soap import soap_transform
-from proxy.pipe.recipe.transform import Proxy
+from proxy.pipe.recipe.transform import Flow
 
 result = 42
 
 
-def recipe(flow: Proxy):
+def recipe(flow: Flow):
     realpath = os.path.realpath(__file__)
     dir = os.path.dirname(realpath)
     url = 'file://' + dir + "/DuckService2.wsdl"

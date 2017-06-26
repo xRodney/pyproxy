@@ -7,7 +7,7 @@ from proxy.pipe import default_recipe
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import Processing, ProcessingFinishedError
 from proxy.pipe.recipe.matchers import has_method
-from proxy.pipe.recipe.transform import Proxy
+from proxy.pipe.recipe.transform import Flow
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
@@ -30,7 +30,7 @@ def simple_delete_request():
 
 
 def test_default_recipe(simple_get_request, response_302):
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
     default_recipe.recipe(flow)
 
     processing = Processing("local", flow(simple_get_request))
@@ -52,7 +52,7 @@ def test_default_recipe(simple_get_request, response_302):
 
 
 def test_pass_through(simple_get_request):
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
     flow.then_pass_through()
 
     processing = Processing("local", flow(simple_get_request))
@@ -72,7 +72,7 @@ def test_pass_through(simple_get_request):
 
 
 def test_respond(simple_get_request):
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
     flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
     processing = Processing("local", flow(simple_get_request))
@@ -89,7 +89,7 @@ def test_respond(simple_get_request):
 
 
 def test_has_method(simple_get_request, simple_delete_request):
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
     flow.when(has_method(b"GET")).then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
     flow.when(has_method(b"DELETE")).then_respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
 
@@ -107,7 +107,7 @@ def test_has_method(simple_get_request, simple_delete_request):
 
 
 def test_decorator_syntax(simple_get_request):
-    flow = Proxy(PARAMETERS)
+    flow = Flow(PARAMETERS)
 
     @flow.respond_when(has_method(b"GET"))
     def handle(request):

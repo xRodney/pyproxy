@@ -11,7 +11,7 @@ from proxy.flows import duck_flow
 from proxy.pipe import default_recipe
 from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
 from proxy.pipe.logger import logger
-from proxy.pipe.recipe.transform import Proxy
+from proxy.pipe.recipe.transform import Flow
 from proxy.pipe.reporting import MessageListener
 
 BUFFER_SIZE = 65536
@@ -57,7 +57,7 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
 
-        flow = Proxy(proxy_parameters)
+        flow = Flow(proxy_parameters)
         duck_flow.recipe(flow)
         default_recipe.recipe(flow)
 

@@ -4,7 +4,7 @@ from hamcrest.core.matcher import Matcher
 import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
 from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
-from proxy.pipe.recipe.transform import Transform, Proxy, DoesNotAccept
+from proxy.pipe.recipe.transform import Transform, Flow, DoesNotAccept
 
 
 class SoapTransform(Transform):
@@ -16,7 +16,7 @@ class SoapTransform(Transform):
         return b"soap" in request.get_content_type() or (
             b"xml" in request.get_content_type() and "schemas.xmlsoap.org" in request.body_as_text())
 
-    def transform(self, request, proxy: "Proxy", next_in_chain):
+    def transform(self, request, proxy: "Flow", next_in_chain):
         if not self.__is_soap(request):
             raise DoesNotAccept()
 
