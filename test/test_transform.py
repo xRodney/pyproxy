@@ -1,6 +1,6 @@
 import pytest
 
-from proxy.flows import default_recipe
+from proxy.flows import zz_default_recipe
 from proxy.parser import http_parser
 from proxy.parser.http_parser import HttpResponse, HttpRequest
 from proxy.parser.parser_utils import intialize_parser, parse
@@ -32,7 +32,7 @@ def simple_delete_request():
 def test_default_recipe(simple_get_request, response_302):
     flow = Flow()
     flow.parameters = PARAMETERS
-    flow = default_recipe.register_flow(flow)
+    flow = zz_default_recipe.register_flow(flow)
 
     processing = Processing("local", flow(simple_get_request))
 

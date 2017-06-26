@@ -56,7 +56,8 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         remote_string = remote_connection_string(remote_writer)
         logger.info('connected to remote {}'.format(remote_string))
 
-        flow = Flow(proxy_parameters)
+        flow = Flow()
+        flow.parameters = proxy_parameters
         flow = register_flows(flow)
 
         dispatcher = Dispatcher()

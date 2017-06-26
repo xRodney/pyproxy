@@ -75,4 +75,5 @@ def register_flow(flow: Flow):
         return response
 
     # flow.when(lambda request: b"asset" in request.path).then_respond(respond_404)
-    return flow.transform(DefaultTransform()).then_pass_through()
+    flow.transform(DefaultTransform()).then_pass_through()
+    return flow

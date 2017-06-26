@@ -5,7 +5,7 @@ from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, \
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
 
-from proxy.parser.http_parser import HttpMessage, HttpRequest
+from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
 from proxy.pipe.reporting import LogReport
 from proxy.utils import soap2python
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
@@ -60,8 +60,7 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
         body.setFont(font)
 
         try:
-            element = soap2python.parse_soap_from_string(data.body_as_text())
-            soap_text = soap2python.print_method(element, self.__get_client_for_path(context.request))
+            soap_text = self.__soap_code(data, context)
             body.setPlainText(soap_text)
         except Exception as ex:
             body.setPlainText(str(ex))
@@ -69,6 +68,18 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
         body.setLineWrapMode(QPlainTextEdit.NoWrap)
         body.setReadOnly(True)
         return body
+
+    def __soap_code(self, data: HttpMessage, context: LogReport):
+        if isinstance(data, HttpResponse):
+            request_element = soap2python.parse_soap_from_string(context.request.body_as_text())
+            response_element = soap2python.parse_soap_from_string(context.response.body_as_text())
+
+            soap_text = soap2python.print_method(request_element, self.__get_client_for_path(context.request))
+            soap_text += soap2python.print_method(response_element, self.__get_client_for_path(context.request))
+        else:
+            element = soap2python.parse_soap_from_string(data.body_as_text())
+            soap_text = soap2python.print_method(element, self.__get_client_for_path(context.request))
+        return soap_text
 
     def __is_soap(self, request):
         return b"soap" in request.get_content_type() or (
