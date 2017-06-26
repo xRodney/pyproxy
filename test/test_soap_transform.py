@@ -39,7 +39,8 @@ request = HttpRequest(b'POST', b'/DuckService2',
 
 
 def test_soap_transform_request():
-    flow = Flow(PARAMETERS)
+    flow = Flow()
+    flow.parameters = PARAMETERS
 
     realpath = os.path.realpath(__file__)
     dir = os.path.dirname(realpath)

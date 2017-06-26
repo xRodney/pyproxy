@@ -29,28 +29,39 @@ class Transform(object):
 
 
 class Flow:
-    def __init__(self, parameters):
+    def __init__(self, bind_to=None):
         self.__branches = []
-        self.parameters = parameters
+        self.__parameters = None
+        self.bind_to = bind_to
+
+    @property
+    def parameters(self):
+        return self.__parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        self.__parameters = parameters
+        for branch in self.__branches:
+            branch.parameters = parameters
 
     def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
         if callable(matcher):
             matcher = LambdaMatcher(matcher)
 
-        proxy = GuardedFlow(self.parameters, matcher)
-        self.__branches.append(proxy)
-        return proxy
+        flow = GuardedFlow(self.bind_to, matcher)
+        return self.then_delegate(flow)
 
     def transform(self, transform: Transform):
-        proxy = TransformingFlow(self.parameters, transform)
-        self.__branches.append(proxy)
-        return proxy
+        flow = TransformingFlow(self.bind_to, transform)
+        return self.then_delegate(flow)
 
-    def __call__(self, request: HttpRequest):
+    def __call__(self, request: HttpRequest, bind_to=None):
+        if bind_to is None:
+            bind_to = self.bind_to
 
         for branch in self.__branches:
             try:
-                response = yield from branch(request)
+                response = yield from branch(request, bind_to)
                 return response
             except DoesNotAccept:
                 pass
@@ -58,16 +69,19 @@ class Flow:
         raise DoesNotAccept()
 
     def then_respond(self, responder):
-        def _responder(request):
+        def _responder(request, bind_to):
             yield from []  # Needed as the result must be a generator
-            response = responder(request)
+            if bind_to:
+                response = responder(bind_to, request)
+            else:
+                response = responder(request)
             return response
 
         self.__branches.append(_responder)
         return self
 
     def then_pass_through(self, endpoint="remote"):
-        def _responder(request):
+        def _responder(request, bind_to):
             response = yield endpoint, request
             return response
 
@@ -76,10 +90,18 @@ class Flow:
 
     def then_delegate(self, flow):
         self.__branches.append(flow)
-        return self
+        flow.parameters = self.parameters
+        return flow
 
     def respond_when(self, matcher):
         return self.when(matcher).then_respond
+
+    def handle_by(self, handler_class):
+        handler = handler_class()
+        flow = handler.flow
+        flow.bind_to = handler
+        self.then_delegate(flow)
+
 
 
 class GuardedFlow(Flow):
@@ -87,11 +109,11 @@ class GuardedFlow(Flow):
         super().__init__(parameters)
         self.__guard = guard
 
-    def __call__(self, request: HttpRequest):
+    def __call__(self, request: HttpRequest, bind_to=None):
         if not self.__guard.matches(request):
             raise DoesNotAccept()
 
-        return super().__call__(request)
+        return super().__call__(request, bind_to)
 
 
 class TransformingFlow(Flow):
@@ -99,5 +121,6 @@ class TransformingFlow(Flow):
         super().__init__(parameters)
         self.__transform = transform
 
-    def __call__(self, request: HttpRequest):
-        return self.__transform.transform(request, self, super().__call__)
+    def __call__(self, request: HttpRequest, bind_to=None):
+        super_call = super().__call__
+        return self.__transform.transform(request, self, lambda request: super_call(request, bind_to))

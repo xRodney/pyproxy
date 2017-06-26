@@ -30,8 +30,9 @@ def simple_delete_request():
 
 
 def test_default_recipe(simple_get_request, response_302):
-    flow = Flow(PARAMETERS)
-    default_recipe.recipe(flow)
+    flow = Flow()
+    flow.parameters = PARAMETERS
+    flow = default_recipe.register_flow(flow)
 
     processing = Processing("local", flow(simple_get_request))
 
@@ -52,7 +53,8 @@ def test_default_recipe(simple_get_request, response_302):
 
 
 def test_pass_through(simple_get_request):
-    flow = Flow(PARAMETERS)
+    flow = Flow()
+    flow.parameters = PARAMETERS
     flow.then_pass_through()
 
     processing = Processing("local", flow(simple_get_request))
@@ -72,7 +74,8 @@ def test_pass_through(simple_get_request):
 
 
 def test_respond(simple_get_request):
-    flow = Flow(PARAMETERS)
+    flow = Flow()
+    flow.parameters = PARAMETERS
     flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
     processing = Processing("local", flow(simple_get_request))
@@ -89,7 +92,8 @@ def test_respond(simple_get_request):
 
 
 def test_has_method(simple_get_request, simple_delete_request):
-    flow = Flow(PARAMETERS)
+    flow = Flow()
+    flow.parameters = PARAMETERS
     flow.when(has_method(b"GET")).then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
     flow.when(has_method(b"DELETE")).then_respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
 
@@ -107,13 +111,37 @@ def test_has_method(simple_get_request, simple_delete_request):
 
 
 def test_decorator_syntax(simple_get_request):
-    flow = Flow(PARAMETERS)
+    flow = Flow()
+    flow.parameters = PARAMETERS
 
     @flow.respond_when(has_method(b"GET"))
     def handle(request):
         return HttpResponse(b"200", b"OK", b"This is body")
 
     processing1 = Processing("local", flow(simple_get_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+
+
+def test_bound_transform(simple_get_request):
+    main_flow = Flow()
+    main_flow.parameters = PARAMETERS
+
+    class MyHandler:
+        flow = Flow()
+
+        def __init__(self):
+            self.response = HttpResponse(b"200", b"OK", b"This is body")
+
+        @flow.respond_when(has_method(b"GET"))
+        def handle(self, request):
+            return self.response
+
+    main_flow.handle_by(MyHandler)
+
+    processing1 = Processing("local", main_flow(simple_get_request))
     target_endpoint, response1 = processing1.send_message(None)
 
     assert target_endpoint == "local"
