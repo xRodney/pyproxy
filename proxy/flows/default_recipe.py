@@ -66,7 +66,7 @@ class DefaultTransform(Transform):
         return self.process_message(response, proxy.parameters)
 
 
-def recipe(proxy: Flow):
+def register_flow(flow: Flow):
     def respond_404(request: HttpRequest):
         response = HttpResponse()
         response.status = b"404"
@@ -74,5 +74,5 @@ def recipe(proxy: Flow):
         response.body = b"Zkus hledat jinde"
         return response
 
-    # proxy.when(lambda request: b"asset" in request.path).then_respond(respond_404)
-    proxy.transform(DefaultTransform()).then_pass_through()
+    # flow.when(lambda request: b"asset" in request.path).then_respond(respond_404)
+    return flow.transform(DefaultTransform()).then_pass_through()

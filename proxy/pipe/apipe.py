@@ -7,10 +7,9 @@ import sys
 import threading
 from threading import Thread
 
-from proxy.flows import duck_flow
-from proxy.pipe import default_recipe
 from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
 from proxy.pipe.logger import logger
+from proxy.pipe.recipe.recipe_finder import register_flows
 from proxy.pipe.recipe.transform import Flow
 from proxy.pipe.reporting import MessageListener
 
@@ -58,8 +57,7 @@ async def accept_client(client_reader, client_writer, proxy_parameters, listener
         logger.info('connected to remote {}'.format(remote_string))
 
         flow = Flow(proxy_parameters)
-        duck_flow.recipe(flow)
-        default_recipe.recipe(flow)
+        flow = register_flows(flow)
 
         dispatcher = Dispatcher()
         dispatcher.add_endpoint(InputEndpoint("local", client_reader, client_writer, client_string, flow, listener))

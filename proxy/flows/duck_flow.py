@@ -9,7 +9,7 @@ from proxy.pipe.recipe.transform import Flow
 result = 42
 
 
-def recipe(flow: Flow):
+def register_flow(flow: Flow):
     realpath = os.path.realpath(__file__)
     dir = os.path.dirname(realpath)
     url = 'file://' + dir + "/DuckService2.wsdl"
@@ -24,3 +24,5 @@ def recipe(flow: Flow):
         setattr(response, "return", result)
         result += 1
         return response
+
+    return flow

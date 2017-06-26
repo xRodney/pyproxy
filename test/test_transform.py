@@ -1,9 +1,9 @@
 import pytest
 
+from proxy.flows import default_recipe
 from proxy.parser import http_parser
 from proxy.parser.http_parser import HttpResponse, HttpRequest
 from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe import default_recipe
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import Processing, ProcessingFinishedError
 from proxy.pipe.recipe.matchers import has_method
