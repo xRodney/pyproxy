@@ -5,11 +5,11 @@
 ```bash
 $ make
 $ . venv/bin/activate
-$ make venv_install
+(venv) $ make venv_install
 ```
 
 ## Run
 
 ```bash
-$ python __main__.py
+(venv) $ python __main__.py
 ```
