@@ -103,6 +103,10 @@ class SoapMatches(BaseMatcher):
 
     @staticmethod
     def suds_object_matches(pattern, item, strict):
+        if isinstance(item, suds.sudsobject.Object):
+            if not isinstance(item, pattern.__class__):
+                return False
+
         for key, value in suds.sudsobject.items(pattern):
             if value is None and not strict:
                 continue

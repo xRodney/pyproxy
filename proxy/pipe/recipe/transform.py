@@ -102,7 +102,6 @@ class Flow:
         return self.when(matcher).then_respond
 
 
-
 class GuardedFlow(Flow):
     def __init__(self, guard, parameters=None):
         super().__init__(parameters)
