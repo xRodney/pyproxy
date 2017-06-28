@@ -30,8 +30,7 @@ def simple_delete_request():
 
 
 def test_default_recipe(simple_get_request, response_302):
-    flow = Flow()
-    flow.parameters = PARAMETERS
+    flow = Flow(PARAMETERS)
     flow = zz_default_recipe.register_flow(flow)
 
     processing = Processing("local", flow(simple_get_request))
@@ -53,8 +52,7 @@ def test_default_recipe(simple_get_request, response_302):
 
 
 def test_pass_through(simple_get_request):
-    flow = Flow()
-    flow.parameters = PARAMETERS
+    flow = Flow(PARAMETERS)
     flow.then_pass_through()
 
     processing = Processing("local", flow(simple_get_request))
@@ -74,8 +72,7 @@ def test_pass_through(simple_get_request):
 
 
 def test_respond(simple_get_request):
-    flow = Flow()
-    flow.parameters = PARAMETERS
+    flow = Flow(PARAMETERS)
     flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
     processing = Processing("local", flow(simple_get_request))
@@ -92,8 +89,7 @@ def test_respond(simple_get_request):
 
 
 def test_has_method(simple_get_request, simple_delete_request):
-    flow = Flow()
-    flow.parameters = PARAMETERS
+    flow = Flow(PARAMETERS)
     flow.when(has_method(b"GET")).then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
     flow.when(has_method(b"DELETE")).then_respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
 
@@ -111,8 +107,7 @@ def test_has_method(simple_get_request, simple_delete_request):
 
 
 def test_decorator_syntax(simple_get_request):
-    flow = Flow()
-    flow.parameters = PARAMETERS
+    flow = Flow(PARAMETERS)
 
     @flow.respond_when(has_method(b"GET"))
     def handle(request):
@@ -126,8 +121,7 @@ def test_decorator_syntax(simple_get_request):
 
 
 def test_bound_transform(simple_get_request):
-    main_flow = Flow()
-    main_flow.parameters = PARAMETERS
+    main_flow = Flow(PARAMETERS)
 
     class MyHandler:
         flow = Flow()
@@ -139,7 +133,10 @@ def test_bound_transform(simple_get_request):
         def handle(self, request):
             return self.response
 
-    main_flow.handle_by(MyHandler)
+    handler = MyHandler()
+    assert handler.flow is not getattr(handler, "flow")
+
+    main_flow.then_delegate(handler.flow)
 
     processing1 = Processing("local", main_flow(simple_get_request))
     target_endpoint, response1 = processing1.send_message(None)

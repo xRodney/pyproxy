@@ -1,3 +1,5 @@
+import copy
+
 from hamcrest.core.matcher import Matcher
 from typing import Union, Callable, Any
 
@@ -29,10 +31,9 @@ class Transform(object):
 
 
 class Flow:
-    def __init__(self, bind_to=None):
+    def __init__(self, parameters=None):
         self.__branches = []
-        self.__parameters = None
-        self.bind_to = bind_to
+        self.__parameters = parameters
 
     @property
     def parameters(self):
@@ -42,26 +43,33 @@ class Flow:
     def parameters(self, parameters):
         self.__parameters = parameters
         for branch in self.__branches:
-            branch.parameters = parameters
+            if hasattr(branch, "parameters"):
+                branch.parameters = parameters
+
+    def __get__(self, instance, owner):
+        new_flow = copy.copy(self)
+        for i, branch in enumerate(new_flow.__branches):
+            if hasattr(branch, "__get__"):
+                new_flow.__branches[i] = branch.__get__(instance, owner)
+            else:
+                new_flow.__branches[i] = branch
+        return new_flow
 
     def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
         if callable(matcher):
             matcher = LambdaMatcher(matcher)
 
-        flow = GuardedFlow(self.bind_to, matcher)
+        flow = GuardedFlow(matcher, self.__parameters)
         return self.then_delegate(flow)
 
     def transform(self, transform: Transform):
-        flow = TransformingFlow(self.bind_to, transform)
+        flow = TransformingFlow(transform, self.__parameters)
         return self.then_delegate(flow)
 
-    def __call__(self, request: HttpRequest, bind_to=None):
-        if bind_to is None:
-            bind_to = self.bind_to
-
+    def __call__(self, request: HttpRequest):
         for branch in self.__branches:
             try:
-                response = yield from branch(request, bind_to)
+                response = yield from branch(request)
                 return response
             except DoesNotAccept:
                 pass
@@ -69,20 +77,17 @@ class Flow:
         raise DoesNotAccept()
 
     def then_respond(self, responder):
-        def _responder(request, bind_to):
+        def _responder(*args):
             yield from []  # Needed as the result must be a generator
-            if bind_to:
-                response = responder(bind_to, request)
-            else:
-                response = responder(request)
+            response = responder(*args)
             return response
 
         self.__branches.append(_responder)
         return self
 
     def then_pass_through(self, endpoint="remote"):
-        def _responder(request, bind_to):
-            response = yield endpoint, request
+        def _responder(*args):
+            response = yield endpoint, args[-1]
             return response
 
         self.__branches.append(_responder)
@@ -96,31 +101,25 @@ class Flow:
     def respond_when(self, matcher):
         return self.when(matcher).then_respond
 
-    def handle_by(self, handler_class):
-        handler = handler_class()
-        flow = handler.flow
-        flow.bind_to = handler
-        self.then_delegate(flow)
-
 
 
 class GuardedFlow(Flow):
-    def __init__(self, parameters, guard):
+    def __init__(self, guard, parameters=None):
         super().__init__(parameters)
         self.__guard = guard
 
-    def __call__(self, request: HttpRequest, bind_to=None):
+    def __call__(self, request: HttpRequest):
         if not self.__guard.matches(request):
             raise DoesNotAccept()
 
-        return super().__call__(request, bind_to)
+        return super().__call__(request)
 
 
 class TransformingFlow(Flow):
-    def __init__(self, parameters, transform):
+    def __init__(self, transform, parameters=None):
         super().__init__(parameters)
         self.__transform = transform
 
-    def __call__(self, request: HttpRequest, bind_to=None):
+    def __call__(self, request: HttpRequest):
         super_call = super().__call__
-        return self.__transform.transform(request, self, lambda request: super_call(request, bind_to))
+        return self.__transform.transform(request, self, super_call)
