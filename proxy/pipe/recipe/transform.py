@@ -47,12 +47,22 @@ class Flow:
                 branch.parameters = parameters
 
     def __get__(self, instance, owner):
+        if not instance:
+            return self
+
+        new_flow = instance.__dict__.get("__flow", None)
+        if new_flow is not None:
+            return new_flow
+
         new_flow = copy.copy(self)
-        for i, branch in enumerate(new_flow.__branches):
+        new_flow.__branches = []
+        for branch in self.__branches:
             if hasattr(branch, "__get__"):
-                new_flow.__branches[i] = branch.__get__(instance, owner)
+                new_flow.__branches.append(branch.__get__(instance, owner))
             else:
-                new_flow.__branches[i] = branch
+                new_flow.__branches.append(branch)
+
+        instance.__dict__["__flow"] = new_flow
         return new_flow
 
     def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
@@ -77,17 +87,23 @@ class Flow:
         raise DoesNotAccept()
 
     def then_respond(self, responder):
-        def _responder(*args):
-            yield from []  # Needed as the result must be a generator
-            response = responder(*args)
-            return response
+        if callable(responder):
+            def _responder(*args):
+                yield from []  # Needed as the result must be a generator
+                response = responder(*args)
+                return response
+        else:
+            def _responder(*args):
+                yield from []  # Needed as the result must be a generator
+                return responder
 
         self.__branches.append(_responder)
         return self
 
     def then_pass_through(self, endpoint="remote"):
-        def _responder(*args):
-            response = yield endpoint, args[-1]
+        def _responder(self, request=None):
+            if not request: request = self  # The method can be bound or not bound
+            response = yield endpoint, request
             return response
 
         self.__branches.append(_responder)

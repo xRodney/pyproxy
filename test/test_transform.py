@@ -71,7 +71,7 @@ def test_pass_through(simple_get_request):
         processing.send_message(HttpResponse())
 
 
-def test_respond(simple_get_request):
+def test_respond_lambda(simple_get_request):
     flow = Flow(PARAMETERS)
     flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
@@ -86,6 +86,18 @@ def test_respond(simple_get_request):
 
     with pytest.raises(ProcessingFinishedError):
         processing.send_message(HttpResponse())
+
+
+def test_respond_direct(simple_get_request):
+    flow = Flow(PARAMETERS)
+    flow.then_respond(HttpResponse(b"200", b"OK", b"This is body"))
+
+    processing = Processing("local", flow(simple_get_request))
+
+    target_endpoint, response = processing.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response.status == b"200"
 
 
 def test_has_method(simple_get_request, simple_delete_request):
@@ -120,7 +132,7 @@ def test_decorator_syntax(simple_get_request):
     assert response1.status == b"200"
 
 
-def test_bound_transform(simple_get_request):
+def test_bound_transform(simple_get_request, simple_delete_request):
     main_flow = Flow(PARAMETERS)
 
     class MyHandler:
@@ -128,13 +140,15 @@ def test_bound_transform(simple_get_request):
 
         def __init__(self):
             self.response = HttpResponse(b"200", b"OK", b"This is body")
+            self.flow.then_respond(HttpResponse(b"404", b"Not found", b"This is body"))
 
         @flow.respond_when(has_method(b"GET"))
         def handle(self, request):
             return self.response
 
     handler = MyHandler()
-    assert handler.flow is not getattr(handler, "flow")
+    assert handler.flow is not MyHandler.flow, "Flow is cloned for each instance"
+    assert handler.flow is handler.flow, "Flow is cloned just once for an instance, not on every access"
 
     main_flow.then_delegate(handler.flow)
 
@@ -143,3 +157,9 @@ def test_bound_transform(simple_get_request):
 
     assert target_endpoint == "local"
     assert response1.status == b"200"
+
+    processing1 = Processing("local", main_flow(simple_delete_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"404"
