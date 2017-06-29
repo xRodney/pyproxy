@@ -80,12 +80,12 @@ def print_usage_and_exit():
 
 
 async def prepare_server(proxy_parameters, listener=None):
-    def handle_client(client_reader, client_writer):
-        asyncio.ensure_future(accept_client(
+    async def handle_client(client_reader, client_writer):
+        await accept_client(
             client_reader=client_reader, client_writer=client_writer,
             proxy_parameters=proxy_parameters,
             listener=listener
-        ))
+        )
 
     try:
         server = await asyncio.start_server(

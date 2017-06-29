@@ -39,12 +39,12 @@ class MessageListener:
     def on_change(self, log):
         print(log)
 
-        if "remote" in log:
-            merged = RequestResponse(log["remote"].request, log["local"].response)
+        if "remote" in log.messages:
+            merged = RequestResponse(log.messages["remote"].request, log.messages["local"].response)
         else:
-            merged = RequestResponse(log["local"].request, log["local"].response)
+            merged = RequestResponse(log.messages["local"].request, log.messages["local"].response)
 
-        merged.guid = log["local"].guid
+        merged.guid = log.guid
         self.on_request_response(merged)
 
 class LogReport:
