@@ -9,8 +9,8 @@ from threading import Thread
 
 from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
 from proxy.pipe.logger import logger
+from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.recipe_finder import register_flows
-from proxy.pipe.recipe.transform import Flow
 from proxy.pipe.reporting import MessageListener
 
 BUFFER_SIZE = 65536

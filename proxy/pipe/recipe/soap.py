@@ -3,8 +3,8 @@ from hamcrest.core.matcher import Matcher
 
 import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
+from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept
 from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
-from proxy.pipe.recipe.transform import Transform, Flow, DoesNotAccept
 
 
 class SoapTransform(Transform):

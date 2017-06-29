@@ -6,8 +6,8 @@ from proxy.parser.http_parser import HttpResponse, HttpRequest
 from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import Processing, ProcessingFinishedError
+from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.matchers import has_method
-from proxy.pipe.recipe.transform import Flow
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 

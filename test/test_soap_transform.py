@@ -5,8 +5,8 @@ import suds.sudsobject
 from proxy.parser.http_parser import HttpRequest
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.communication import Processing
+from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.soap import soap_transform
-from proxy.pipe.recipe.transform import Flow
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 

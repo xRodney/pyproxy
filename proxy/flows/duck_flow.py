@@ -2,9 +2,9 @@ import os
 
 import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
+from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.matchers import has_path
 from proxy.pipe.recipe.soap import soap_transform, soap_matches_loosely
-from proxy.pipe.recipe.transform import Flow
 
 
 def register_flow(flow: Flow):

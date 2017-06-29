@@ -1,6 +1,6 @@
 from proxy.parser.http_parser import HttpResponse, HttpRequest
 
-from proxy.pipe.recipe.transform import Flow, Transform
+from proxy.pipe.recipe.flow import Flow, Transform
 
 
 class DefaultTransform(Transform):

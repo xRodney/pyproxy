@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 from proxy.pipe.importing import import_submodules
-from proxy.pipe.recipe.transform import Flow
+from proxy.pipe.recipe.flow import Flow
 
 
 @lru_cache()
