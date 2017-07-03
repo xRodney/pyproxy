@@ -7,7 +7,10 @@ import sys
 import threading
 from threading import Thread
 
-from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
+from typing import Iterable
+
+from proxy.pipe.communication import FlowDefinition, Server
+from proxy.pipe.endpoint import InputEndpoint, OutputEndpoint, Endpoint, InputEndpointParameters, EndpointParameters
 from proxy.pipe.logger import logger
 from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.recipe_finder import register_flows
@@ -25,48 +28,6 @@ class ProxyParameters():
         self.remote_port = remote_port
 
 
-def client_connection_string(writer):
-    return '{} -> {}'.format(
-        writer.get_extra_info('peername'),
-        writer.get_extra_info('sockname'))
-
-
-def remote_connection_string(writer):
-    return '{} -> {}'.format(
-        writer.get_extra_info('sockname'),
-        writer.get_extra_info('peername'))
-
-
-async def accept_client(client_reader, client_writer, proxy_parameters, listener):
-    client_string = client_connection_string(client_writer)
-    logger.info('accept connection {}'.format(client_string))
-    try:
-        (remote_reader, remote_writer) = await asyncio.wait_for(
-            asyncio.open_connection(host=proxy_parameters.remote_address, port=proxy_parameters.remote_port),
-            timeout=CONNECT_TIMEOUT_SECONDS)
-    except asyncio.TimeoutError:
-        logger.info('connect timeout')
-        logger.info('close connection {}'.format(client_string))
-        client_writer.close()
-    except Exception as e:
-        logger.info('error connecting to remote server: {}'.format(e))
-        logger.info('close connection {}'.format(client_string))
-        client_writer.close()
-    else:
-        remote_string = remote_connection_string(remote_writer)
-        logger.info('connected to remote {}'.format(remote_string))
-
-        flow = Flow()
-        flow.parameters = proxy_parameters
-        flow = register_flows(flow)
-
-        dispatcher = Dispatcher()
-        dispatcher.add_endpoint(InputEndpoint("local", client_reader, client_writer, client_string, flow, listener))
-        dispatcher.add_endpoint(OutputEndpoint("remote", remote_reader, remote_writer, remote_string))
-
-        await dispatcher.loop()
-
-
 def parse_addr_port_string(addr_port_string):
     addr_port_list = addr_port_string.rsplit(':', 1)
     return (addr_port_list[0], int(addr_port_list[1]))
@@ -77,27 +38,6 @@ def print_usage_and_exit():
         'Usage: {} <listen addr> <remote addr>'.format(
             sys.argv[0]))
     sys.exit(1)
-
-
-async def prepare_server(proxy_parameters, listener=None):
-    async def handle_client(client_reader, client_writer):
-        await accept_client(
-            client_reader=client_reader, client_writer=client_writer,
-            proxy_parameters=proxy_parameters,
-            listener=listener
-        )
-
-    try:
-        server = await asyncio.start_server(
-            handle_client, host=proxy_parameters.local_address, port=proxy_parameters.local_port)
-    except Exception as e:
-        logger.error('Bind error: {}'.format(e))
-        raise
-
-    for s in server.sockets:
-        logger.info('listening on {}'.format(s.getsockname()))
-
-    return server
 
 
 class PipeThread(Thread):
@@ -128,7 +68,11 @@ class PipeThread(Thread):
 
     async def __start_proxy(self, proxy_parameters):
         assert threading.current_thread() is self
-        self.server = await prepare_server(proxy_parameters, self.listener)
+
+        definition = ProxyFlowDefinition(proxy_parameters, self.listener)
+        self.server = Server(definition)
+        await self.server.start()
+
         assert self.server is not None
 
     def stop_proxy(self):
@@ -138,12 +82,30 @@ class PipeThread(Thread):
     async def __stop_proxy(self):
         assert threading.current_thread() is self
         if self.server:
-            self.server.close()
-            await self.server.wait_closed()
+            await self.server.close(wait_closed=True)
         self.server = None
 
     def is_running(self):
         return self.__is_running
+
+
+class ProxyFlowDefinition(FlowDefinition):
+    def __init__(self, parameters: ProxyParameters, listener: MessageListener):
+        self.parameters = parameters
+        self.listener = listener
+        self.__flow = None
+
+    def get_flow(self, endpoint_name):
+        if self.__flow is None:
+            self.__flow = Flow(self.parameters)
+            self.__flow = register_flows(self.__flow)
+        return self.__flow
+
+    def endpoints(self) -> Iterable[Endpoint]:
+        yield InputEndpoint("local", InputEndpointParameters(
+            self.parameters.local_address, self.parameters.local_port, self.listener))
+        yield OutputEndpoint("remote", EndpointParameters(
+            self.parameters.remote_address, self.parameters.remote_port))
 
 
 if __name__ == '__main__':
@@ -157,8 +119,9 @@ if __name__ == '__main__':
         print_usage_and_exit()
     else:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            prepare_server(proxy_parameters, MessageListener()))
+        definition = ProxyFlowDefinition(proxy_parameters, MessageListener())
+        server = Server(definition)
+        loop.run_until_complete(server.start())
         try:
             loop.run_forever()
         except KeyboardInterrupt:

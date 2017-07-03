@@ -4,7 +4,7 @@ import suds
 import suds.sudsobject
 from proxy.parser.http_parser import HttpRequest
 from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.communication import Processing
+from proxy.pipe.endpoint import Processing
 from proxy.pipe.recipe.flow import Flow
 from proxy.pipe.recipe.soap import soap_transform
 

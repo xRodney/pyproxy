@@ -1,94 +1,28 @@
 import asyncio
-import collections
 
-from typing import Union
+from typing import Union, Iterable
 
-from proxy.parser import http_parser
 from proxy.parser.http_parser import HttpMessage
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.logger import logger
-from proxy.pipe.reporting import MessageListener, LogReport
-
-BUFFER_SIZE = 65536
+from proxy.pipe.endpoint import Endpoint, InputEndpoint, OutputEndpoint
 
 
-class Endpoint:
-    def __init__(self, name: str, reader, writer, connection_string):
-        self.name = name
-        self.reader = reader
-        self.writer = writer
-        self.connection_string = connection_string
+class FlowDefinition:
+    def endpoints(self) -> Iterable[Endpoint]:
+        return ()
 
-    async def _write_message(self, message: HttpMessage):
-        for data in message.to_bytes():
-            self.writer.write(data)
-        await self.writer.drain()
+    def get_flow(self, endpoint_name):
+        return self.default_flow
 
-    async def read_loop(self, async_callback):
-        try:
-            parser = intialize_parser(http_parser.get_http_request)
-            while True:
-                data = await self.reader.read(BUFFER_SIZE)
-
-                for msg in parse(parser, data):
-                    await async_callback(msg)
-
-                if not data:
-                    break
-        except Exception as e:
-            logger.info('proxy_task exception {}'.format(e))
-            raise
-
-    def close(self):
-        self.writer.close()
-        logger.info('close connection {}'.format(self.connection_string))
-
-    async def on_received(self, message: HttpMessage):
-        pass
-
-    async def send(self, message: HttpMessage, processing):
-        pass
-
-
-class InputEndpoint(Endpoint):
-    def __init__(self, name: str, reader, writer, connection_string, processor, listener=None):
-        super().__init__(name, reader, writer, connection_string)
-        self.processor = processor
-        self.listener = listener
-
-    async def on_received(self, message: HttpMessage):
-        flow = self.processor(message)
-        processing = Processing(self.name, flow, listener=self.listener)
-        processing.log_request(self.name, message)
-        endpoint_name, message = processing.send_message(None)
-        return processing, endpoint_name, message
-
-    async def send(self, message: HttpMessage, processing):
-        processing.log_response(self.name, message)
-        await self._write_message(message)
-
-
-class OutputEndpoint(Endpoint):
-    def __init__(self, name: str, reader, writer, connection_string):
-        super().__init__(name, reader, writer, connection_string)
-        self.pending_processsings = collections.deque()
-
-    async def send(self, message: HttpMessage, processing):
-        self.pending_processsings.append(processing)
-        processing.log_request(self.name, message)
-        await self._write_message(message)
-
-    async def on_received(self, message: HttpMessage):
-        assert len(self.pending_processsings) > 0, "Response without a request"
-        processing = self.pending_processsings.popleft()
-        processing.log_response(self.name, message)
-        endpoint_name, message = processing.send_message(message)
-        return processing, endpoint_name, message
+    def default_flow(self, request):
+        yield from []
 
 
 class Dispatcher:
-    def __init__(self):
+    def __init__(self, flow_definition: FlowDefinition):
         self.endpoints = {}
+        self.flow_definition = flow_definition
+        for endpoint in flow_definition.endpoints():
+            self.add_endpoint(endpoint)
 
     def add_endpoint(self, endpoint: Endpoint):
         endpoint.dispatcher = self
@@ -105,13 +39,20 @@ class Dispatcher:
 
         await target_endpoint.send(message_to_send, processing)
 
-    async def loop(self):
-        futures = []
-
+    async def handle_client(self, endpoint_name, reader, writer):
+        flow = self.flow_definition.get_flow(endpoint_name)
+        await self.endpoints[endpoint_name].connection_opened(reader, writer, flow)
         for endpoint in self.endpoints.values():
-            futures.append(asyncio.ensure_future(self.__loop1(endpoint)))
+            if isinstance(endpoint, OutputEndpoint):
+                await endpoint.open_connection()
 
+        await self.loop()
+
+    async def loop(self):
         try:
+            futures = []
+            for endpoint in self.endpoints.values():
+                futures.append(asyncio.ensure_future(self.__loop1(endpoint)))
             await asyncio.gather(*futures, return_exceptions=True)
         finally:
             for endpoint in self.endpoints.values():
@@ -124,36 +65,38 @@ class Dispatcher:
         await endpoint.read_loop(_dispatch)
 
 
-class ProcessingFinishedError(ValueError):
-    pass
+class Server:
+    def __init__(self, flow_definition: FlowDefinition):
+        self.flow_definition = flow_definition
+        self.servers = []
 
-
-class Processing:
-    def __init__(self, source_endpoint, flow, listener: MessageListener = None):
-        self.source_endpoint = source_endpoint
-        self.flow = flow
-        self.log = LogReport()
-        self.listener = listener
-
-    def send_message(self, message):
-        if self.has_finished():
-            raise ProcessingFinishedError("Flow has already finished")
-
+    async def start(self):
+        endpoints = list(self.flow_definition.endpoints())
         try:
-            return self.flow.send(message)
-        except StopIteration as e:
-            self.flow = None
-            return self.source_endpoint, e.value
+            self.servers = []
+            for endpoint in endpoints:
+                if isinstance(endpoint, InputEndpoint):
+                    future = await self.__start1(endpoint)
+                    self.servers.append(future)
+        except Exception as e:
+            print("Cannot start server: {}".format(e))
 
-    def has_finished(self):
-        return self.flow is None
+            self.servers = []
 
-    def log_request(self, endpoint_name, message):
-        self.log.log_request(endpoint_name, message)
-        if self.listener:
-            self.listener.on_change(self.log)
+    async def __start1(self, endpoint: InputEndpoint):
+        async def _handle_client(reader, writer):
+            dispatcher = Dispatcher(self.flow_definition)
+            await dispatcher.handle_client(endpoint.name, reader, writer)
 
-    def log_response(self, endpoint_name, message):
-        self.log.log_response(endpoint_name, message)
-        if self.listener:
-            self.listener.on_change(self.log)
+        return await endpoint.listen(_handle_client)
+
+    async def close(self, wait_closed=False):
+        try:
+            for future in self.servers:
+                future.close()
+
+            if wait_closed:
+                for future in self.servers:
+                    await future.wait_closed()
+        except Exception as e:
+            print("Error closing the server: {}".format(e))

@@ -1,7 +1,8 @@
 import pytest
 
 from proxy.parser.http_parser import HttpRequest, HttpResponse
-from proxy.pipe.communication import InputEndpoint, OutputEndpoint, Dispatcher
+from proxy.pipe.communication import Dispatcher, FlowDefinition
+from proxy.pipe.endpoint import InputEndpoint, OutputEndpoint, InputEndpointParameters
 
 
 class TestWriter:
@@ -21,6 +22,9 @@ class TestWriter:
     def close(self):
         pass
 
+    def get_extra_info(self, param):
+        return "<extra_info:{}>".format(param)
+
 
 class TestReader:
     """
@@ -37,22 +41,29 @@ class TestReader:
         return self.data[pos1:self.pos]
 
 
+class TestOutputEndpoint(OutputEndpoint):
+    async def open_connection(self):
+        self.writer = TestWriter()
+
+
 @pytest.mark.asyncio
 async def test_dispatcher():
-    def sample_flow(request):
-        response1 = yield "first", HttpRequest(b"GET", b"/first" + request.path)
-        response2 = yield "second", HttpRequest(b"GET", b"/second" + request.path)
+    input_endpoint = InputEndpoint("input", InputEndpointParameters("address", 1234, None))
+    first_endpoint = TestOutputEndpoint("first", None)
+    second_endpoint = TestOutputEndpoint("second", None)
 
-        return HttpResponse(b"200", b"OK", response1.body + response2.body)
+    class SampleDefinition(FlowDefinition):
+        def endpoints(self):
+            return input_endpoint, first_endpoint, second_endpoint
 
-    input_endpoint = InputEndpoint("input", None, TestWriter(), "", sample_flow)
-    first_endpoint = OutputEndpoint("first", None, TestWriter(), "")
-    second_endpoint = OutputEndpoint("second", None, TestWriter(), "")
+        def default_flow(self, request):
+            response1 = yield "first", HttpRequest(b"GET", b"/first" + request.path)
+            response2 = yield "second", HttpRequest(b"GET", b"/second" + request.path)
 
-    dispatcher = Dispatcher()
-    dispatcher.add_endpoint(input_endpoint)
-    dispatcher.add_endpoint(first_endpoint)
-    dispatcher.add_endpoint(second_endpoint)
+            return HttpResponse(b"200", b"OK", response1.body + response2.body)
+
+    dispatcher = Dispatcher(SampleDefinition())
+    await dispatcher.handle_client("input", None, TestWriter())
 
     request = HttpRequest(b"GET", b"/sample/path")
     await dispatcher.dispatch("input", request)
@@ -74,17 +85,20 @@ async def test_dispatcher():
 
 @pytest.mark.asyncio
 async def test_two_flows():
-    def sample_flow(request):
-        response1 = yield "output", HttpRequest(b"GET", b"/first" + request.path)
+    input_endpoint = InputEndpoint("input", InputEndpointParameters("address", 1234, None))
+    output_endpoint = TestOutputEndpoint("output", None)
 
-        return HttpResponse(b"200", b"OK", response1.body)
+    class SampleDefinition(FlowDefinition):
+        def endpoints(self):
+            return input_endpoint, output_endpoint
 
-    input_endpoint = InputEndpoint("input", None, TestWriter(), "", sample_flow)
-    output_endpoint = OutputEndpoint("output", None, TestWriter(), "")
+        def default_flow(self, request):
+            response1 = yield "output", HttpRequest(b"GET", b"/first" + request.path)
 
-    dispatcher = Dispatcher()
-    dispatcher.add_endpoint(input_endpoint)
-    dispatcher.add_endpoint(output_endpoint)
+            return HttpResponse(b"200", b"OK", response1.body)
+
+    dispatcher = Dispatcher(SampleDefinition())
+    await dispatcher.handle_client("input", None, TestWriter())
 
     await dispatcher.dispatch("input", HttpRequest(b"GET", b"/sample/path1"))
     await dispatcher.dispatch("input", HttpRequest(b"GET", b"/sample/path2"))
@@ -105,14 +119,18 @@ async def test_loop():
     request_bytes = b"".join(HttpRequest(b"GET", b"/sample/first", headers={b"X": b"y"}).to_bytes())
     response = HttpResponse(b"200", b"OK", b"This is body")
 
-    def sample_flow(request):
-        yield from []  # needed as we need a generator that never yields
-        return response
+    input_endpoint = InputEndpoint("input", InputEndpointParameters("address", 1234, None))
 
-    input_endpoint = InputEndpoint("input", TestReader(request_bytes), TestWriter(), "", sample_flow)
+    class SampleDefinition(FlowDefinition):
+        def endpoints(self):
+            return (input_endpoint,)
 
-    dispatcher = Dispatcher()
-    dispatcher.add_endpoint(input_endpoint)
+        def default_flow(self, request):
+            yield from []  # needed as we need a generator that never yields
+            return response
+
+    dispatcher = Dispatcher(SampleDefinition())
+    await dispatcher.handle_client("input", TestReader(request_bytes), TestWriter())
 
     await dispatcher.loop()
 
