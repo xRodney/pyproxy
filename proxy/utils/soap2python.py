@@ -190,12 +190,12 @@ def print_args(element, api_name, level=1):
     return output
 
 
-def print_method(element, api_name):
+def print_method(element, api_name, level=0):
     method_name = normalize_tag(element.tag)
     output = print_identifier(method_name, api_name)
     output += "(\n"
-    output += print_args(element, api_name)
-    output += ")\n"
+    output += print_args(element, api_name, level=level + 1)
+    output += "    " * level + ")\n"
     return output
 
 

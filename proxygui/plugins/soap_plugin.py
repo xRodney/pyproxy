@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineE
 from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
 from proxy.pipe.reporting import LogReport
 from proxy.utils import soap2python
+from proxy.utils.soap2python import normalize_tag
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
 
 
@@ -74,8 +75,11 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
             request_element = soap2python.parse_soap_from_string(context.request.body_as_text())
             response_element = soap2python.parse_soap_from_string(context.response.body_as_text())
 
-            soap_text = soap2python.print_method(request_element, self.__get_client_for_path(context.request))
-            soap_text += soap2python.print_method(response_element, self.__get_client_for_path(context.request))
+            soap_text = "@flow.respond_soap("
+            soap_text += soap2python.print_method(request_element, "flow.factory", level=1)
+            soap_text += ")\n"
+            soap_text += "def handle_" + normalize_tag(request_element.tag) + "(self, request):\n"
+            soap_text += "    return " + soap2python.print_method(response_element, "self.flow.factory", level=1)
         else:
             element = soap2python.parse_soap_from_string(data.body_as_text())
             soap_text = soap2python.print_method(element, self.__get_client_for_path(context.request))
