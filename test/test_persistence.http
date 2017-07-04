@@ -1,0 +1,962 @@
+Report: 6fdba8967f4f4eaf902fd1f32941dd47
+Endpoint local
+Request: GET / HTTP/1.1
+Accept-Encoding: identity
+Connection: close
+User-Agent: Python-urllib/3.5
+Host: www.httpwatch.com
+
+
+Response: HTTP/1.1 200 OK
+Cache-Control: public, max-age=0
+Content-Length: 17864
+Content-Type: text/html; charset=utf-8
+Last-Modified: Tue, 04 Jul 2017 12:26:52 GMT
+Server: Microsoft-IIS/8.0
+X-AspNet-Version: 4.0.30319
+X-Powered-By: ASP.NET
+Arr-Disable-Session-Affinity: True
+Date: Tue, 04 Jul 2017 19:42:14 GMT
+Connection: close
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes,  shrink-to-fit=no" /><meta name="description" content="HttpWatch: The ultimate HTTP Sniffer for Chrome, IE and iOS" /><meta name="apple-itunes-app" content="app-id=658886056, affiliate-data=at=1l3vmf8&amp;ct=hwdownloadbasic_www" /><link rel="icon" type="image/x-icon" href="/favicon.ico?v1" /><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v1" /><title>
+	HttpWatch 11: HTTP Sniffer for Chrome, IE, iPhone and iPad
+</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/assets/stylesheets/grid.min.css" /><link rel="stylesheet" href="/assets/stylesheets/main.css" /><link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+
+	<script type="text/javascript">
+		(function (i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+				(i[r].q = i[r].q || []).push(arguments)
+			}, i[r].l = 1 * new Date(); a = s.createElement(o),
+			m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-533344-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+
+</head>
+
+<body id="V10TopMasterBodyTag" class="home">
+    <!-- Container -->
+    <div id="container">
+
+        <!-- Header -->
+        <header id="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-3 col-xs-6">
+                        <!-- Logo -->
+                        
+                        <!-- /Logo -->
+                    </div>
+                    <div class="col-sm-9 col-xs-6">
+                        <!-- Main Navigation -->
+                        <nav id="main-navigation">
+                            <button type="button" class="menu-btn">&nbsp;</button>
+                            <ul class="group">
+                                <li><a href="/buy/">Pricing</a></li>
+                                <li><a href="/download/">Download</a></li>
+                                <li><a href="/support/">Support</a></li>
+                                <li class="buy-now"><a href="/buy/">BUY NOW</a></li>
+                            </ul>
+                        </nav>
+                        <!-- /Main Navigation -->
+
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- /Header -->
+
+        
+    <!-- Banner -->
+  <div id="banner">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-5 col-xs-12">
+          <section class="inner-wrap"><!-- Logo -->
+            <section class="logo">
+              <h1><a href="/"><img src="/assets/images/logo.png"></a></h1>
+            </section>
+            <!-- /Logo -->
+            <p>Become a debugging and web performance guru with the ultimate in-browser HTTP sniffer.</p>
+            <a href="/download/" class="button1">TRY FOR FREE</a></section>
+        </div>
+        <div class="col-sm-7 col-xs-12">
+		  <style>
+				div.slides img { display: none }
+				div.slides img.first { display: block }	
+				.cycle-pager { 
+					text-align: center; width: 100%; z-index: 500;  overflow: hidden;
+					position:absolute; left:0; bottom:-40px;
+				}
+				.cycle-pager span { 
+					font-family: arial; font-size: 40px; width: 16px; height: 16px; 
+					display: inline-block; color: #ddd; cursor: pointer; 
+				}
+				.cycle-pager span.cycle-pager-active { color: #58aa27;}
+				.cycle-pager > * { cursor: pointer;}
+							
+		  </style>
+          <div class="slides cycle-slideshow" auto-height="0" data-cycle-pause-on-hover=true data-cycle-swipe=true
+			   data-cycle-loader=true data-cycle-progressive="#images"
+			  >
+             <img class="first" src="/assets/images/banner/home_page_screenshot1.png" alt="HttpWatch Add-on For Firefox">
+             
+             
+
+			<script id="images" type="text/cycle">
+			[
+				"<img src='/assets/images/banner/home_page_iphone.jpg' alt='HttpWatch For iOS'>",
+				"<img src='/assets/images/banner/home_page_screenshot2.png' alt='HttpWatch Window'>",
+				"<img src='/assets/images/banner/home_page_screenshot3.png' alt='HttpWatch Window'>"
+			]
+			</script>
+
+		 <div class="cycle-pager"></div>
+          </div>
+		
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Banner --> 
+  <!-- Content -->
+  <div id="content">
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12"> 
+          <!-- Features -->
+          <section id="features">
+            <h2><a name="features"></a><a href="/features/httpdebugger.aspx">Features</a></h2>
+            <div class="row">
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/httpdebugger.aspx"><img src="/assets/images/icons/debugging.png" alt="debugging"></a></i>
+                <h3><a href="/features/httpdebugger.aspx">Web Page Debugging</a></h3>
+                <p>Debug the network traffic generated by a web page directly in the browser without having 
+                  to switch to a separate tool. </p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/webperformance.aspx"><img src="/assets/images/icons/performance.png" alt="performance"></a></i>
+                <h3><a href="/features/webperformance.aspx">Performance Tuning</a></h3>
+                <p>Accurately measure the network performance of a web page and view opportunities for boosting its speed.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/httpssniffer.aspx"><img src="/assets/images/icons/noproxy.png" alt="noproxy"></a></i>
+                <h3><a href="/features/httpssniffer.aspx">Simple No-Proxy Setup</a></h3>
+                <p>No extra configuration or proxies are required - even with encrypted HTTPS traffic!</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/sslsecurity.aspx"><img src="/assets/images/icons/security.png" alt="security"></a></i>
+                <h3><a href="/features/sslsecurity.aspx">Security Testing</a></h3>
+                <p>Quickly find weak SSL configurations and other security related issues on your web server.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/freelogfiles.aspx"><img src="/assets/images/icons/logos.png" alt="logos"></a></i>
+                <h3><a href="/features/freelogfiles.aspx">Free Log File Sharing</a></h3>
+                <p>Anyone can use the free Basic Edition to send you full log files to help you remotely diagnose errors or performance issues.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/automatedtesting.aspx"><img src="/assets/images/icons/automated.png" alt="automated"></a></i>
+                <h3><a href="/features/automatedtesting.aspx">Automated HTTP Testing</a></h3>
+                <p>Use the HttpWatch API to collect performance data from your automated web site tests.</p>
+              </div>
+            </div>
+          </section>
+          <!-- /Features --> 
+          
+        </div>
+      </div>
+    </div>
+    <!-- Our Customers -->
+    <section id="our-customers">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12">
+            <h2><a name="customers"></a>Our Customers</h2>
+            <!-- Logos -->
+            <section class="logos">
+              <ul class="row">
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/cisco.png" alt="cisco"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/citrix.png" alt="citrix"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/ebay.png" alt="ebay"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/google.png" alt="google"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/microsoft.png" alt="microsoft"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/paypal.png" alt="paypal"></a></li>
+              </ul>
+            </section>
+            <!-- /Logos --> 
+            <!-- Testimonials -->
+            <section class="testomonials">
+              <div class="row">
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                    <a name="quotes"></a>
+                  <blockquote>
+                     <section class="inner">
+                      <p>We use HttpWatch to help ensure the performance of our site meets and exceeds the high standards of our community.</p>
+                    </section>
+                    <p><cite>Mahesh Subramanian, eBay</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>HttpWatch is clearly the best I’ve used and has quickly become the tool of choice for my team.</p>
+                    </section>
+                    <p><cite>Scott Stabbert - Microsoft</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner" id="SAP">
+                      <p>Thank you very much for HttpWatch! It is the best tool available to learn and understand HTTP and to see what the browser is doing.</p>
+                    </section>
+                    <p><cite>Brian McKellar, SAP</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>HttpWatch is awesome! We use it in QA while testing web applications. It allows us to quickly identify issues on the fly.</p>
+                    </section>
+                    <p><cite>Brent Strange - QA Engineer</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>After three days using HttpWatch Professional, I have cured more ills in my projects than in a month of effort using lesser tools.</p>
+                    </section>
+                    <p><cite>J. Miller - PA, USA</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>I love this product! It is the most useful tool I have ever seen for this sort of job.  Well done!</p>
+                    </section>
+                    <p><cite>John Page - Javeo Corp.</cite></p>
+                  </blockquote>
+                </div>
+              </div>
+            </section>
+            <!-- /Testimonials --> 
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /Our Customers --> 
+  </div>
+  <!--/Content --> 
+
+
+        <!-- Dashboard -->
+        <div id="dashboard">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2><span>Ready to get started?</span> <a href="/download/" class="button1">TRY FOR FREE</a> <a href="/buy/" class="button1 buy-now-btn">Buy Now</a></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Dashboard -->
+
+        <!-- Footer -->
+        <footer id="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-3 col-xs-12">
+                        <h3>HttpWatch</h3>
+                        <ul>
+                            <li><a href="/features/httpdebugger.aspx">Features</a></li>
+                            <li><a href="/editions.aspx">Compare Editions</a></li>
+                            <li><a href="/newfeatures.aspx">New in Version 11.x</a></li>
+                            <li><a href="/download/">Download</a></li>
+                            <li><a href="/buy/">Pricing</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-3 col-xs-12">
+                        <h3>Our Customers</h3>
+                        <ul>
+                            <li><a href="/#customers">Who is using it?</a></li>
+                            <li><a href="/#quotes">What are they saying?</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-4 col-xs-12">
+                        <h3>Learning &amp; Documentation</h3>
+                        <ul>
+                            <li><a href="http://blog.httpwatch.com">HttpWatch Blog</a></li>
+                            <li><a href="/httpgallery/">HTTP Gallery</a></li>
+                            <li><a href="http://help.httpwatch.com">HttpWatch Help</a></li>
+                            <li><a href="http://apihelp.httpwatch.com">HttpWatch Automation Reference</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-2 col-xs-12">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="/support/">Technical Support</a></li>
+                            <li><a href="/company/">About Us</a></li>
+                            <li><a href="/company/">Contact Us</a></li>
+                            <li><a href="http://blog.httpwatch.com">Blog</a></li>
+                            <li><a href="https://twitter.com/httpwatch">Twitter</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-7 col-sm-12 col-xs-12">
+                        <nav id="footer-navigation">
+                            <ul class="group">
+                                <li><a href="/search/">Search</a></li>
+                                <li><a href="/company/terms.aspx">Terms &amp; Conditions</a></li>
+                                <li><a href="/company/privacy_policy.aspx">Privacy Policy</a></li>
+                                <li><a href="/company/copyright.aspx">Copyright</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="col-md-5 col-sm-12 col-xs-12">
+                        <p>Copyright © <span>2017</span> Neumetrix Limited <a href="/">
+                            <img src="/assets/images/logo1.png" alt="HttpWarch Logo"></a></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- Footer -->
+
+    </div>
+    <!-- /Container -->
+
+    <!-- Javascript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <!-- Custom JS Code for all pages -->
+	<script>
+		$(document).ready(function () {
+			// Open menu from top right hamburger menu	in reduced width mode
+			$('#main-navigation .menu-btn').click(function () {
+				$('#main-navigation > ul').slideToggle();
+			});
+
+			// Open drop down list of side menu items in reduced width mode from 'Jump to...'
+			$('#sidebar-navigation .menu-btn').click(function () {
+				$('#sidebar-navigation ul').slideToggle();
+			});
+
+		});
+	</script>
+
+    <script src="/assets/javascripts/vendor/retina-1.3.0.min.js"></script>
+
+    
+	<script src="/assets/javascripts/vendor/jquery.cycle2.min.js"></script>
+	<script>
+		$(document).ready(function ()
+		{
+			var Height = $('#our-customers .testomonials blockquote #SAP').height();
+			$('#our-customers .testomonials blockquote .inner').height(Height);
+	
+/*
+			$('#banner .slides').cycle({
+				slideExpr: ' .slide',
+				cleartypeNoBg: ' true' ,
+				fx: 'fade',
+				timeout: 6000,
+				fit: 1,
+				slideResize: 0,
+				containerResize:0,
+				height:'auto',
+				width:null,
+				pager: '.controls'
+			});
+	
+			var Height1 = $('#banner .slides img:visible').height();
+			$('#banner .slides, #banner .slide').height(Height1);
+*/
+		});		
+
+		$(window).resize(function() {
+			$('#our-customers .testomonials blockquote .inner').removeAttr("style");
+	
+			var Height = $('#our-customers .testomonials blockquote .inner').height();
+			$('#our-customers .testomonials blockquote .inner').height(Height);
+	
+			var Height1 = $('#banner .slides img:visible').height();
+			$('#banner .slides, #banner .slide').height(Height1);
+		});
+	</script>
+	
+	<script type="application/ld+json">
+	{
+	   "@context": "http://schema.org",
+	   "@type": "WebSite",
+	   "url": "http://www.httpwatch.com/",
+	   "potentialAction": {
+		 "@type": "SearchAction",
+		 "target": "https://www.httpwatch.com/search/?q={search_term_string}",
+		 "query-input": "required name=search_term_string"
+	   }
+	}
+	</script>
+
+</body>
+
+</html>
+
+Endpoint remote
+Request: GET / HTTP/1.1
+Accept-Encoding: identity
+Connection: close
+User-Agent: Python-urllib/3.5
+Host: www.httpwatch.com
+
+
+Response: HTTP/1.1 200 OK
+Cache-Control: public, max-age=0
+Content-Length: 17864
+Content-Type: text/html; charset=utf-8
+Last-Modified: Tue, 04 Jul 2017 12:26:52 GMT
+Server: Microsoft-IIS/8.0
+X-AspNet-Version: 4.0.30319
+X-Powered-By: ASP.NET
+Arr-Disable-Session-Affinity: True
+Date: Tue, 04 Jul 2017 19:42:14 GMT
+Connection: close
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes,  shrink-to-fit=no" /><meta name="description" content="HttpWatch: The ultimate HTTP Sniffer for Chrome, IE and iOS" /><meta name="apple-itunes-app" content="app-id=658886056, affiliate-data=at=1l3vmf8&amp;ct=hwdownloadbasic_www" /><link rel="icon" type="image/x-icon" href="/favicon.ico?v1" /><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v1" /><title>
+	HttpWatch 11: HTTP Sniffer for Chrome, IE, iPhone and iPad
+</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/assets/stylesheets/grid.min.css" /><link rel="stylesheet" href="/assets/stylesheets/main.css" /><link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic" rel="stylesheet" type="text/css" /><link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+
+	<script type="text/javascript">
+		(function (i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+				(i[r].q = i[r].q || []).push(arguments)
+			}, i[r].l = 1 * new Date(); a = s.createElement(o),
+			m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-533344-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+
+</head>
+
+<body id="V10TopMasterBodyTag" class="home">
+    <!-- Container -->
+    <div id="container">
+
+        <!-- Header -->
+        <header id="header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-3 col-xs-6">
+                        <!-- Logo -->
+                        
+                        <!-- /Logo -->
+                    </div>
+                    <div class="col-sm-9 col-xs-6">
+                        <!-- Main Navigation -->
+                        <nav id="main-navigation">
+                            <button type="button" class="menu-btn">&nbsp;</button>
+                            <ul class="group">
+                                <li><a href="/buy/">Pricing</a></li>
+                                <li><a href="/download/">Download</a></li>
+                                <li><a href="/support/">Support</a></li>
+                                <li class="buy-now"><a href="/buy/">BUY NOW</a></li>
+                            </ul>
+                        </nav>
+                        <!-- /Main Navigation -->
+
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- /Header -->
+
+        
+    <!-- Banner -->
+  <div id="banner">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-5 col-xs-12">
+          <section class="inner-wrap"><!-- Logo -->
+            <section class="logo">
+              <h1><a href="/"><img src="/assets/images/logo.png"></a></h1>
+            </section>
+            <!-- /Logo -->
+            <p>Become a debugging and web performance guru with the ultimate in-browser HTTP sniffer.</p>
+            <a href="/download/" class="button1">TRY FOR FREE</a></section>
+        </div>
+        <div class="col-sm-7 col-xs-12">
+		  <style>
+				div.slides img { display: none }
+				div.slides img.first { display: block }	
+				.cycle-pager { 
+					text-align: center; width: 100%; z-index: 500;  overflow: hidden;
+					position:absolute; left:0; bottom:-40px;
+				}
+				.cycle-pager span { 
+					font-family: arial; font-size: 40px; width: 16px; height: 16px; 
+					display: inline-block; color: #ddd; cursor: pointer; 
+				}
+				.cycle-pager span.cycle-pager-active { color: #58aa27;}
+				.cycle-pager > * { cursor: pointer;}
+							
+		  </style>
+          <div class="slides cycle-slideshow" auto-height="0" data-cycle-pause-on-hover=true data-cycle-swipe=true
+			   data-cycle-loader=true data-cycle-progressive="#images"
+			  >
+             <img class="first" src="/assets/images/banner/home_page_screenshot1.png" alt="HttpWatch Add-on For Firefox">
+             
+             
+
+			<script id="images" type="text/cycle">
+			[
+				"<img src='/assets/images/banner/home_page_iphone.jpg' alt='HttpWatch For iOS'>",
+				"<img src='/assets/images/banner/home_page_screenshot2.png' alt='HttpWatch Window'>",
+				"<img src='/assets/images/banner/home_page_screenshot3.png' alt='HttpWatch Window'>"
+			]
+			</script>
+
+		 <div class="cycle-pager"></div>
+          </div>
+		
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Banner --> 
+  <!-- Content -->
+  <div id="content">
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12"> 
+          <!-- Features -->
+          <section id="features">
+            <h2><a name="features"></a><a href="/features/httpdebugger.aspx">Features</a></h2>
+            <div class="row">
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/httpdebugger.aspx"><img src="/assets/images/icons/debugging.png" alt="debugging"></a></i>
+                <h3><a href="/features/httpdebugger.aspx">Web Page Debugging</a></h3>
+                <p>Debug the network traffic generated by a web page directly in the browser without having 
+                  to switch to a separate tool. </p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/webperformance.aspx"><img src="/assets/images/icons/performance.png" alt="performance"></a></i>
+                <h3><a href="/features/webperformance.aspx">Performance Tuning</a></h3>
+                <p>Accurately measure the network performance of a web page and view opportunities for boosting its speed.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/httpssniffer.aspx"><img src="/assets/images/icons/noproxy.png" alt="noproxy"></a></i>
+                <h3><a href="/features/httpssniffer.aspx">Simple No-Proxy Setup</a></h3>
+                <p>No extra configuration or proxies are required - even with encrypted HTTPS traffic!</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/sslsecurity.aspx"><img src="/assets/images/icons/security.png" alt="security"></a></i>
+                <h3><a href="/features/sslsecurity.aspx">Security Testing</a></h3>
+                <p>Quickly find weak SSL configurations and other security related issues on your web server.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/freelogfiles.aspx"><img src="/assets/images/icons/logos.png" alt="logos"></a></i>
+                <h3><a href="/features/freelogfiles.aspx">Free Log File Sharing</a></h3>
+                <p>Anyone can use the free Basic Edition to send you full log files to help you remotely diagnose errors or performance issues.</p>
+              </div>
+              <div class="col-md-4 col-sm-6 col-xs-12"> <i class="icon"><a href="/features/automatedtesting.aspx"><img src="/assets/images/icons/automated.png" alt="automated"></a></i>
+                <h3><a href="/features/automatedtesting.aspx">Automated HTTP Testing</a></h3>
+                <p>Use the HttpWatch API to collect performance data from your automated web site tests.</p>
+              </div>
+            </div>
+          </section>
+          <!-- /Features --> 
+          
+        </div>
+      </div>
+    </div>
+    <!-- Our Customers -->
+    <section id="our-customers">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12">
+            <h2><a name="customers"></a>Our Customers</h2>
+            <!-- Logos -->
+            <section class="logos">
+              <ul class="row">
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/cisco.png" alt="cisco"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/citrix.png" alt="citrix"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/ebay.png" alt="ebay"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/google.png" alt="google"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/microsoft.png" alt="microsoft"></a></li>
+                <li class="col-sm-2 col-xs-6"><a href="#"><img src="/assets/images/logos/paypal.png" alt="paypal"></a></li>
+              </ul>
+            </section>
+            <!-- /Logos --> 
+            <!-- Testimonials -->
+            <section class="testomonials">
+              <div class="row">
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                    <a name="quotes"></a>
+                  <blockquote>
+                     <section class="inner">
+                      <p>We use HttpWatch to help ensure the performance of our site meets and exceeds the high standards of our community.</p>
+                    </section>
+                    <p><cite>Mahesh Subramanian, eBay</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>HttpWatch is clearly the best I’ve used and has quickly become the tool of choice for my team.</p>
+                    </section>
+                    <p><cite>Scott Stabbert - Microsoft</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner" id="SAP">
+                      <p>Thank you very much for HttpWatch! It is the best tool available to learn and understand HTTP and to see what the browser is doing.</p>
+                    </section>
+                    <p><cite>Brian McKellar, SAP</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>HttpWatch is awesome! We use it in QA while testing web applications. It allows us to quickly identify issues on the fly.</p>
+                    </section>
+                    <p><cite>Brent Strange - QA Engineer</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>After three days using HttpWatch Professional, I have cured more ills in my projects than in a month of effort using lesser tools.</p>
+                    </section>
+                    <p><cite>J. Miller - PA, USA</cite></p>
+                  </blockquote>
+                </div>
+                <div class="col-md-4 col-sm-6 col-xs-12">
+                  <blockquote>
+                    <section class="inner">
+                      <p>I love this product! It is the most useful tool I have ever seen for this sort of job.  Well done!</p>
+                    </section>
+                    <p><cite>John Page - Javeo Corp.</cite></p>
+                  </blockquote>
+                </div>
+              </div>
+            </section>
+            <!-- /Testimonials --> 
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /Our Customers --> 
+  </div>
+  <!--/Content --> 
+
+
+        <!-- Dashboard -->
+        <div id="dashboard">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2><span>Ready to get started?</span> <a href="/download/" class="button1">TRY FOR FREE</a> <a href="/buy/" class="button1 buy-now-btn">Buy Now</a></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Dashboard -->
+
+        <!-- Footer -->
+        <footer id="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-3 col-xs-12">
+                        <h3>HttpWatch</h3>
+                        <ul>
+                            <li><a href="/features/httpdebugger.aspx">Features</a></li>
+                            <li><a href="/editions.aspx">Compare Editions</a></li>
+                            <li><a href="/newfeatures.aspx">New in Version 11.x</a></li>
+                            <li><a href="/download/">Download</a></li>
+                            <li><a href="/buy/">Pricing</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-3 col-xs-12">
+                        <h3>Our Customers</h3>
+                        <ul>
+                            <li><a href="/#customers">Who is using it?</a></li>
+                            <li><a href="/#quotes">What are they saying?</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-4 col-xs-12">
+                        <h3>Learning &amp; Documentation</h3>
+                        <ul>
+                            <li><a href="http://blog.httpwatch.com">HttpWatch Blog</a></li>
+                            <li><a href="/httpgallery/">HTTP Gallery</a></li>
+                            <li><a href="http://help.httpwatch.com">HttpWatch Help</a></li>
+                            <li><a href="http://apihelp.httpwatch.com">HttpWatch Automation Reference</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-2 col-xs-12">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="/support/">Technical Support</a></li>
+                            <li><a href="/company/">About Us</a></li>
+                            <li><a href="/company/">Contact Us</a></li>
+                            <li><a href="http://blog.httpwatch.com">Blog</a></li>
+                            <li><a href="https://twitter.com/httpwatch">Twitter</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-7 col-sm-12 col-xs-12">
+                        <nav id="footer-navigation">
+                            <ul class="group">
+                                <li><a href="/search/">Search</a></li>
+                                <li><a href="/company/terms.aspx">Terms &amp; Conditions</a></li>
+                                <li><a href="/company/privacy_policy.aspx">Privacy Policy</a></li>
+                                <li><a href="/company/copyright.aspx">Copyright</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="col-md-5 col-sm-12 col-xs-12">
+                        <p>Copyright © <span>2017</span> Neumetrix Limited <a href="/">
+                            <img src="/assets/images/logo1.png" alt="HttpWarch Logo"></a></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- Footer -->
+
+    </div>
+    <!-- /Container -->
+
+    <!-- Javascript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <!-- Custom JS Code for all pages -->
+	<script>
+		$(document).ready(function () {
+			// Open menu from top right hamburger menu	in reduced width mode
+			$('#main-navigation .menu-btn').click(function () {
+				$('#main-navigation > ul').slideToggle();
+			});
+
+			// Open drop down list of side menu items in reduced width mode from 'Jump to...'
+			$('#sidebar-navigation .menu-btn').click(function () {
+				$('#sidebar-navigation ul').slideToggle();
+			});
+
+		});
+	</script>
+
+    <script src="/assets/javascripts/vendor/retina-1.3.0.min.js"></script>
+
+    
+	<script src="/assets/javascripts/vendor/jquery.cycle2.min.js"></script>
+	<script>
+		$(document).ready(function ()
+		{
+			var Height = $('#our-customers .testomonials blockquote #SAP').height();
+			$('#our-customers .testomonials blockquote .inner').height(Height);
+	
+/*
+			$('#banner .slides').cycle({
+				slideExpr: ' .slide',
+				cleartypeNoBg: ' true' ,
+				fx: 'fade',
+				timeout: 6000,
+				fit: 1,
+				slideResize: 0,
+				containerResize:0,
+				height:'auto',
+				width:null,
+				pager: '.controls'
+			});
+	
+			var Height1 = $('#banner .slides img:visible').height();
+			$('#banner .slides, #banner .slide').height(Height1);
+*/
+		});		
+
+		$(window).resize(function() {
+			$('#our-customers .testomonials blockquote .inner').removeAttr("style");
+	
+			var Height = $('#our-customers .testomonials blockquote .inner').height();
+			$('#our-customers .testomonials blockquote .inner').height(Height);
+	
+			var Height1 = $('#banner .slides img:visible').height();
+			$('#banner .slides, #banner .slide').height(Height1);
+		});
+	</script>
+	
+	<script type="application/ld+json">
+	{
+	   "@context": "http://schema.org",
+	   "@type": "WebSite",
+	   "url": "http://www.httpwatch.com/",
+	   "potentialAction": {
+		 "@type": "SearchAction",
+		 "target": "https://www.httpwatch.com/search/?q={search_term_string}",
+		 "query-input": "required name=search_term_string"
+	   }
+	}
+	</script>
+
+</body>
+
+</html>
+
+End report
+-------------------------------------------------------------------------------
+Report: a036346ecf004e0593e5f1de6184f37a
+Endpoint local
+Request: POST /stockquote.asmx HTTP/1.1
+Accept-Encoding: gzip,deflate
+Content-Type: text/xml;charset=UTF-8
+SOAPAction: "http://www.webserviceX.NET/GetQuote"
+Content-Length: 299
+Host: www.httpwatch.com
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.1.1 (java 1.5)
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.webserviceX.NET/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <web:GetQuote>
+         <!--Optional:-->
+         <web:symbol>?</web:symbol>
+      </web:GetQuote>
+   </soapenv:Body>
+</soapenv:Envelope>
+Response: HTTP/1.1 404 Not Found
+Cache-Control: private
+Content-Length: 1900
+Content-Type: text/html; charset=utf-8
+Server: Microsoft-IIS/8.0
+X-AspNet-Version: 4.0.30319
+X-Powered-By: ASP.NET
+Arr-Disable-Session-Affinity: True
+Date: Tue, 04 Jul 2017 19:49:05 GMT
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The resource cannot be found.</title>
+        <meta name="viewport" content="width=device-width" />
+        <style>
+         body {font-family:"Verdana";font-weight:normal;font-size: .7em;color:black;} 
+         p {font-family:"Verdana";font-weight:normal;color:black;margin-top: -5px}
+         b {font-family:"Verdana";font-weight:bold;color:black;margin-top: -5px}
+         H1 { font-family:"Verdana";font-weight:normal;font-size:18pt;color:red }
+         H2 { font-family:"Verdana";font-weight:normal;font-size:14pt;color:maroon }
+         pre {font-family:"Consolas","Lucida Console",Monospace;font-size:11pt;margin:0;padding:0.5em;line-height:14pt}
+         .marker {font-weight: bold; color: black;text-decoration: none;}
+         .version {color: gray;}
+         .error {margin-bottom: 10px;}
+         .expandable { text-decoration:underline; font-weight:bold; color:navy; cursor:hand; }
+         @media screen and (max-width: 639px) {
+          pre { width: 440px; overflow: auto; white-space: pre-wrap; word-wrap: break-word; }
+         }
+         @media screen and (max-width: 479px) {
+          pre { width: 280px; }
+         }
+        </style>
+    </head>
+
+    <body bgcolor="white">
+
+            <span><H1>Server Error in '/' Application.<hr width=100% size=1 color=silver></H1>
+
+            <h2> <i>The resource cannot be found.</i> </h2></span>
+
+            <font face="Arial, Helvetica, Geneva, SunSans-Regular, sans-serif ">
+
+            <b> Description: </b>HTTP 404. The resource you are looking for (or one of its dependencies) could have been removed, had its name changed, or is temporarily unavailable. &nbsp;Please review the following URL and make sure that it is spelled correctly.
+            <br><br>
+
+            <b> Requested URL: </b>/stockquote.asmx<br><br>
+
+    </body>
+</html>
+
+Endpoint remote
+Request: POST /stockquote.asmx HTTP/1.1
+Accept-Encoding: gzip,deflate
+Content-Type: text/xml;charset=UTF-8
+SOAPAction: "http://www.webserviceX.NET/GetQuote"
+Content-Length: 299
+Host: www.httpwatch.com
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.1.1 (java 1.5)
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.webserviceX.NET/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <web:GetQuote>
+         <!--Optional:-->
+         <web:symbol>?</web:symbol>
+      </web:GetQuote>
+   </soapenv:Body>
+</soapenv:Envelope>
+Response: HTTP/1.1 404 Not Found
+Cache-Control: private
+Content-Length: 1900
+Content-Type: text/html; charset=utf-8
+Server: Microsoft-IIS/8.0
+X-AspNet-Version: 4.0.30319
+X-Powered-By: ASP.NET
+Arr-Disable-Session-Affinity: True
+Date: Tue, 04 Jul 2017 19:49:05 GMT
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The resource cannot be found.</title>
+        <meta name="viewport" content="width=device-width" />
+        <style>
+         body {font-family:"Verdana";font-weight:normal;font-size: .7em;color:black;} 
+         p {font-family:"Verdana";font-weight:normal;color:black;margin-top: -5px}
+         b {font-family:"Verdana";font-weight:bold;color:black;margin-top: -5px}
+         H1 { font-family:"Verdana";font-weight:normal;font-size:18pt;color:red }
+         H2 { font-family:"Verdana";font-weight:normal;font-size:14pt;color:maroon }
+         pre {font-family:"Consolas","Lucida Console",Monospace;font-size:11pt;margin:0;padding:0.5em;line-height:14pt}
+         .marker {font-weight: bold; color: black;text-decoration: none;}
+         .version {color: gray;}
+         .error {margin-bottom: 10px;}
+         .expandable { text-decoration:underline; font-weight:bold; color:navy; cursor:hand; }
+         @media screen and (max-width: 639px) {
+          pre { width: 440px; overflow: auto; white-space: pre-wrap; word-wrap: break-word; }
+         }
+         @media screen and (max-width: 479px) {
+          pre { width: 280px; }
+         }
+        </style>
+    </head>
+
+    <body bgcolor="white">
+
+            <span><H1>Server Error in '/' Application.<hr width=100% size=1 color=silver></H1>
+
+            <h2> <i>The resource cannot be found.</i> </h2></span>
+
+            <font face="Arial, Helvetica, Geneva, SunSans-Regular, sans-serif ">
+
+            <b> Description: </b>HTTP 404. The resource you are looking for (or one of its dependencies) could have been removed, had its name changed, or is temporarily unavailable. &nbsp;Please review the following URL and make sure that it is spelled correctly.
+            <br><br>
+
+            <b> Requested URL: </b>/stockquote.asmx<br><br>
+
+    </body>
+</html>
+
+End report
+-------------------------------------------------------------------------------

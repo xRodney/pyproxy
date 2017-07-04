@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMes
 
 from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.persistence import parse_message_pairs, serialize_message_pairs
+from proxy.pipe.persistence import parse_message_reports, serialize_message_reports
 from proxy.pipe.reporting import LogReport
 from proxygui.plugins import PLUGINS
 from proxygui.plugins.plugin_registry import PluginRegistry
@@ -149,13 +149,13 @@ class MainWindow(QWidget):
 
     def load(self, file_name):
         f = open(file_name, "rb")
-        for pair in parse_message_pairs(f):
+        for pair in parse_message_reports(f):
             self.onReceived(pair)
         f.close()
 
     def save(self, file_name):
         f = open(file_name, "wb")
-        serialize_message_pairs(self.treeView.getAllMessagePairs(), f)
+        serialize_message_reports(self.treeView.getAllMessagePairs(), f)
         f.close()
 
     def closeEvent(self, QCloseEvent):

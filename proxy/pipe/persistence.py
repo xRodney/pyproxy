@@ -3,7 +3,7 @@ from uuid import UUID
 
 from proxy.parser.http_parser import HttpMessage, get_http_request, get_line
 from proxy.parser.parser_utils import get_word, intialize_parser, parse
-from proxy.pipe.reporting import RequestResponse
+from proxy.pipe.reporting import RequestResponse, LogReport
 
 
 def serialize_message(msg: HttpMessage, stream: BufferedIOBase):
@@ -12,51 +12,71 @@ def serialize_message(msg: HttpMessage, stream: BufferedIOBase):
     stream.write(b"\r\n")
 
 
-def serialize_message_pair(rr: RequestResponse, stream: BufferedIOBase):
-    stream.write(b"Pair: ")
-    stream.write(str(rr.guid.hex).encode())
+def serialize_message_report(report: LogReport, stream: BufferedIOBase):
+    stream.write(b"Report: ")
+    stream.write(str(report.guid.hex).encode())
     stream.write(b"\r\n")
 
-    if rr.request:
-        stream.write(b"Request: ")
-        serialize_message(rr.request, stream)
-    else:
-        stream.write(b"NoRequest\r\n")
+    for key, pair in report.messages.items():
+        stream.write(b"Endpoint " + key.encode() + b"\r\n")
 
-    if rr.response:
-        stream.write(b"Response: ")
-        serialize_message(rr.response, stream)
-    else:
-        stream.write(b"NoResponse\r\n")
+        if report.request:
+            stream.write(b"Request: ")
+            serialize_message(report.request, stream)
+        else:
+            stream.write(b"NoRequest\r\n")
+
+        if report.response:
+            stream.write(b"Response: ")
+            serialize_message(report.response, stream)
+        else:
+            stream.write(b"NoResponse\r\n")
+
+    stream.write(b"End report\r\n")
+    stream.write(b"-------------------------------------------------------------------------------\r\n")
 
 
-def serialize_message_pairs(pairs, stream: BufferedIOBase):
-    for pair in pairs:
-        serialize_message_pair(pair, stream)
+def serialize_message_reports(reports, stream: BufferedIOBase):
+    for report in reports:
+        serialize_message_report(report, stream)
 
 
-def parse_message_pair(data):
+def parse_message_report(data):
     kw, data = yield from get_word(data)
-    assert kw == b"Pair:"
+    assert kw == b"Report:"
     uuid_str, data = yield from get_word(data)
-    rr = RequestResponse()
-    rr.guid = UUID(hex=uuid_str.decode())
+    report = LogReport()
+    report.guid = UUID(hex=uuid_str.decode())
 
     kw, data = yield from get_word(data)
-    if kw == b"Request:":
-        rr.request, data = yield from get_http_request(data)
-        _, data = yield from get_line(data)  # Read the newline
+    while kw == b"Endpoint":
+        key, data = yield from get_word(data)
+        rr = RequestResponse()
 
+        kw, data = yield from get_word(data)
+        if kw == b"Request:":
+            rr.request, data = yield from get_http_request(data)
+            _, data = yield from get_line(data)  # Read the newline
+
+        kw, data = yield from get_word(data)
+        if kw == b"Response:":
+            rr.response, data = yield from get_http_request(data)
+            _, data = yield from get_line(data)  # Read the newline
+
+        report.messages[key.decode()] = rr
+        kw, data = yield from get_word(data)
+
+    assert kw == b"End"
     kw, data = yield from get_word(data)
-    if kw == b"Response:":
-        rr.response, data = yield from get_http_request(data)
-        _, data = yield from get_line(data)  # Read the newline
+    assert kw == b"report"
 
-    return rr, data
+    _, data = yield from get_line(data)  # Read the last line with the dashes
+
+    return report, data
 
 
-def parse_message_pairs(stream: BufferedIOBase):
-    parser = intialize_parser(parse_message_pair)
+def parse_message_reports(stream: BufferedIOBase):
+    parser = intialize_parser(parse_message_report)
 
     data = stream.read(1024)
     while data:
