@@ -3,7 +3,8 @@ from hamcrest.core.matcher import Matcher
 
 import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
-from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept
+from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
+from proxy.pipe.recipe.matchers import has_path
 from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
 
 
@@ -35,6 +36,9 @@ class SoapTransform(Transform):
         xml, soap = self.binding.parse_message(method, messageroot, soapbody, input=True)
 
         response = yield from next_in_chain(soap)
+
+        if isinstance(response, HttpResponse):
+            return response
 
         http_response = HttpResponse(b"200", b"OK")
 
@@ -128,3 +132,27 @@ def soap_matches_loosely(soap_object):
 
 def soap_matches_strictly(soap_object):
     return SoapMatches(soap_object, strict=True)
+
+
+class SoapFlow(TransformingFlow):
+    def __init__(self, client, path, parameters=None):
+        super().__init__(SoapTransform(client), parameters)
+        self.client = client
+        self.matcher = has_path(path)
+
+    def __call__(self, request):
+        if not self.matcher.matches(request):
+            raise DoesNotAccept()
+        return super().__call__(request)
+
+    def respond_soap(self, soap_object):
+        matcher = soap_matches_loosely(soap_object)
+        return self.when(matcher).then_respond
+
+    def respond_soap_strict(self, soap_object):
+        matcher = soap_matches_strictly(soap_object)
+        return self.when(matcher).then_respond
+
+    @property
+    def factory(self):
+        return self.client.factory

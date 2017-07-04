@@ -49,6 +49,8 @@ class Endpoint:
                     break
         except Exception as e:
             logger.info('proxy_task exception {}'.format(e))
+            import traceback
+            traceback.print_exc()
             raise
 
     def close(self):
