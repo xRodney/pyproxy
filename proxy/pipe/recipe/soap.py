@@ -66,6 +66,8 @@ class SoapMatches(BaseMatcher):
     def object_matches(pattern, item, strict):
         if isinstance(pattern, list):
             return SoapMatches.list_matches(pattern, item, strict)
+        elif isinstance(item, list) and not strict:
+            return SoapMatches.list_matches((pattern,), item, strict)
         elif isinstance(pattern, dict):
             return SoapMatches.dict_matches(pattern, item, strict)
         elif isinstance(pattern, suds.sudsobject.Object):
@@ -155,4 +157,18 @@ class SoapFlow(TransformingFlow):
 
     @property
     def factory(self):
-        return self.client.factory
+        return FactoryWrapper(self.client.factory)
+
+
+class FactoryWrapper():
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+
+    def __getattr__(self, item):
+        return getattr(self.wrapped, item)
+
+    def __getitem__(self, item):
+        return self.wrapped[item]
+
+    def __call__(self, *args, **kwargs):
+        return dict(**kwargs)

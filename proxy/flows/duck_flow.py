@@ -24,6 +24,20 @@ class DuckService:
     def __init__(self):
         self.counter = 42
 
+    @flow.respond_soap(flow.factory.duckAdd(
+        username=r"?",
+        password=r"?",
+        settings=flow.factory(
+            key=r"?",
+            value=r"?"
+        )
+    )
+    )
+    def handle_duckAdd(self, request):
+        return self.flow.factory.duckAddResponse(
+            result=115
+        )
+
     @flow.respond_soap(flow.factory.duckAdd())
     def duck_add(self, request):
         response = self.flow.factory.duckAddResponse(result=self.counter)
