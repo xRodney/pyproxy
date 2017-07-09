@@ -5,16 +5,15 @@ from proxy.pipe.recipe.flow import Flow
 
 
 @lru_cache()
-def _find_flows():
-    import proxy.flows
-    modules = import_submodules(proxy.flows)
+def _find_flows(module):
+    modules = import_submodules(module)
     prioritized = [(name, mod) for name, mod in modules.items()]
     prioritized.sort(key=lambda tup: tup[0])
     return prioritized
 
 
-def register_flows(flow: Flow):
-    for name, module in _find_flows():
+def register_flows(module, flow: Flow):
+    for name, module in _find_flows(module):
         try:
             flow = module.register_flow(flow)
         except Exception as e:

@@ -15,6 +15,10 @@ def import_submodules(package, recursive=True):
     """
     if isinstance(package, str):
         package = importlib.import_module(package)
+
+    if not hasattr(package, "__path__"):  # "Package" is in fact just a module
+        return {package.__name__: package}
+
     results = {}
     for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
         full_name = package.__name__ + '.' + name
