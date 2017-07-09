@@ -15,7 +15,11 @@ def _find_flows():
 
 def register_flows(flow: Flow):
     for name, module in _find_flows():
-        flow = module.register_flow(flow)
+        try:
+            flow = module.register_flow(flow)
+        except Exception as e:
+            raise Exception("There was an error registering flow: ", e)
+
         if flow is None:
             raise ValueError("Function register_flow in module {} must return a flow".format(name))
     return flow

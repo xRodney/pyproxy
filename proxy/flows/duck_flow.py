@@ -7,7 +7,7 @@ from proxy.pipe.recipe.soap import soap_transform, SoapFlow
 
 
 def register_flow(flow: Flow):
-    flow.then_delegate(DuckService().flow)
+    flow.delegate(DuckService().flow)
     return flow
 
 
@@ -44,7 +44,7 @@ class DuckService:
         self.counter += 1
         return response
 
-    @flow.then_respond
+    @flow.respond
     def else_response(self, request):
         return HttpResponse(b"500",
                             b"Unmatched request",

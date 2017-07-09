@@ -53,7 +53,7 @@ def test_default_recipe(simple_get_request, response_302):
 
 def test_pass_through(simple_get_request):
     flow = Flow(PARAMETERS)
-    flow.then_pass_through()
+    flow.call_endpoint("remote")
 
     processing = Processing("local", flow(simple_get_request))
 
@@ -73,7 +73,7 @@ def test_pass_through(simple_get_request):
 
 def test_respond_lambda(simple_get_request):
     flow = Flow(PARAMETERS)
-    flow.then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
+    flow.respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
 
     processing = Processing("local", flow(simple_get_request))
 
@@ -90,7 +90,7 @@ def test_respond_lambda(simple_get_request):
 
 def test_respond_direct(simple_get_request):
     flow = Flow(PARAMETERS)
-    flow.then_respond(HttpResponse(b"200", b"OK", b"This is body"))
+    flow.respond(HttpResponse(b"200", b"OK", b"This is body"))
 
     processing = Processing("local", flow(simple_get_request))
 
@@ -102,8 +102,8 @@ def test_respond_direct(simple_get_request):
 
 def test_has_method(simple_get_request, simple_delete_request):
     flow = Flow(PARAMETERS)
-    flow.when(has_method(b"GET")).then_respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
-    flow.when(has_method(b"DELETE")).then_respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
+    flow.when(has_method(b"GET")).respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
+    flow.when(has_method(b"DELETE")).respond(lambda request: HttpResponse(b"404", b"Not found", b"Not found"))
 
     processing1 = Processing("local", flow(simple_get_request))
     target_endpoint, response1 = processing1.send_message(None)
@@ -140,7 +140,7 @@ def test_bound_transform(simple_get_request, simple_delete_request):
 
         def __init__(self):
             self.response = HttpResponse(b"200", b"OK", b"This is body")
-            self.flow.then_respond(HttpResponse(b"404", b"Not found", b"This is body"))
+            self.flow.respond(HttpResponse(b"404", b"Not found", b"This is body"))
 
         @flow.respond_when(has_method(b"GET"))
         def handle(self, request):
@@ -150,7 +150,7 @@ def test_bound_transform(simple_get_request, simple_delete_request):
     assert handler.flow is not MyHandler.flow, "Flow is cloned for each instance"
     assert handler.flow is handler.flow, "Flow is cloned just once for an instance, not on every access"
 
-    main_flow.then_delegate(handler.flow)
+    main_flow.delegate(handler.flow)
 
     processing1 = Processing("local", main_flow(simple_get_request))
     target_endpoint, response1 = processing1.send_message(None)

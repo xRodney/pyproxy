@@ -149,11 +149,11 @@ class SoapFlow(TransformingFlow):
 
     def respond_soap(self, soap_object):
         matcher = soap_matches_loosely(soap_object)
-        return self.when(matcher).then_respond
+        return self.when(matcher).respond
 
     def respond_soap_strict(self, soap_object):
         matcher = soap_matches_strictly(soap_object)
-        return self.when(matcher).then_respond
+        return self.when(matcher).respond
 
     @property
     def factory(self):

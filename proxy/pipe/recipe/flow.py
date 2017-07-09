@@ -70,23 +70,33 @@ class Flow:
             matcher = LambdaMatcher(matcher)
 
         flow = GuardedFlow(matcher, self.__parameters)
-        return self.then_delegate(flow)
+        return self.delegate(flow)
 
     def transform(self, transform: Transform):
         flow = TransformingFlow(transform, self.__parameters)
-        return self.then_delegate(flow)
+        return self.delegate(flow)
 
     def __call__(self, request: HttpRequest):
+        excs = []
         for branch in self.__branches:
             try:
                 response = yield from branch(request)
                 return response
-            except DoesNotAccept:
-                pass
+            except DoesNotAccept as e:
+                excs.append(e)
 
-        raise DoesNotAccept()
+        if not self.__branches:
+            raise DoesNotAccept("The flow has no branches.")
 
-    def then_respond(self, responder):
+        raise DoesNotAccept(excs)
+
+    def respond(self, responder):
+        """
+        Return from the flow with a predefined response.
+        :param responder: If callable, it is invoked with the request as an argument (and possibly self if bound).
+                        If responder is not callable, it is simply taken as a constant response.
+        :return: The responder parameter, unchanged. This allows using this method as a decorator.
+        """
         if callable(responder):
             def _responder(*args):
                 yield from []  # Needed as the result must be a generator
@@ -98,24 +108,42 @@ class Flow:
                 return responder
 
         self.__branches.append(_responder)
-        return self
+        return responder
 
-    def then_pass_through(self, endpoint="remote"):
+    def call_endpoint(self, endpoint):
+        """
+        Send the request to an endpoint identified by name. The response that is read from the endpoint will serve
+        as the response of the flow.
+        :param endpoint: The endpoint name
+        """
+
         def _responder(self, request=None):
             if not request: request = self  # The method can be bound or not bound
             response = yield endpoint, request
             return response
 
         self.__branches.append(_responder)
-        return self
 
-    def then_delegate(self, flow):
+    def delegate(self, flow):
+        """
+        Delegate the flow to another flow. If the delegated flow accepts a request and provides a response,
+         it will be treated as a result of this flow.
+        :param flow: The flow that will be invoked. It must be a generator.
+        :return: The flow parameter. This allows using this method as a decorator.
+        """
         self.__branches.append(flow)
         flow.parameters = self.parameters
         return flow
 
     def respond_when(self, matcher):
-        return self.when(matcher).then_respond
+        """
+        Shortcut to self.when(matcher).respond.
+        The purpose of this method is to be used as a decorator.
+        
+        :param matcher: 
+        :return: A function that, when invoked, will register its parameter as a responder. See #respond.
+        """
+        return self.when(matcher).respond
 
 
 class GuardedFlow(Flow):

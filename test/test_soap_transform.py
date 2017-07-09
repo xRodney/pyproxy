@@ -48,7 +48,7 @@ def test_soap_transform_request():
 
     soap_flow = flow.transform(soap_transform(client))
 
-    @soap_flow.then_respond
+    @soap_flow.respond
     def handle(request):
         assert isinstance(request, suds.sudsobject.Object)
         response = client.factory.duckAddResponse()
