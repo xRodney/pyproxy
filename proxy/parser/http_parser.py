@@ -12,6 +12,8 @@ class HttpMessage:
         self.headers = OrderedDict(**headers) if headers else OrderedDict()
         self.body = body
         self.__body_as_text = None
+        if self.body:
+            self.headers.setdefault(b"Content-Length", str(len(self.body)).encode())
 
     def is_text(self):
         content_type = self.get_content_type()

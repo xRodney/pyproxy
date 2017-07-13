@@ -85,10 +85,12 @@ class Server:
 
     async def __start1(self, endpoint: InputEndpoint):
         async def _handle_client(reader, writer):
-            dispatcher = Dispatcher(self.flow_definition)
-            await dispatcher.handle_client(endpoint.name, reader, writer)
-
+            await self.handle_client(reader, writer, endpoint.name)
         return await endpoint.listen(_handle_client)
+
+    async def handle_client(self, reader, writer, endpoint_name):
+        dispatcher = Dispatcher(self.flow_definition)
+        await dispatcher.handle_client(endpoint_name, reader, writer)
 
     async def close(self, wait_closed=False):
         try:

@@ -54,15 +54,22 @@ class Flow:
         if new_flow is not None:
             return new_flow
 
+        new_flow = self._get_branch(instance, owner)
+
+        instance.__dict__["__flow"] = new_flow
+        return new_flow
+
+    def _get_branch(self, instance, owner):
         new_flow = copy.copy(self)
         new_flow.__branches = []
         for branch in self.__branches:
-            if hasattr(branch, "__get__"):
+            if hasattr(branch, "_get_branch"):
+                new_flow.__branches.append(branch._get_branch(instance, owner))
+            elif hasattr(branch, "__get__"):
                 new_flow.__branches.append(branch.__get__(instance, owner))
             else:
                 new_flow.__branches.append(branch)
 
-        instance.__dict__["__flow"] = new_flow
         return new_flow
 
     def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":

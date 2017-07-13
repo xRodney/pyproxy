@@ -81,6 +81,9 @@ class SoapMatches(BaseMatcher):
 
     @staticmethod
     def list_matches(pattern, item, strict):
+        if item is None and not strict:
+            item = ()
+
         if len(pattern) > len(item) or (strict and len(pattern) != len(item)):
             return False
 
@@ -118,7 +121,7 @@ class SoapMatches(BaseMatcher):
                 continue
 
             try:
-                item_value = getattr(item, key)
+                item_value = getattr(item, key, None)
             except AttributeError:
                 return False
 
