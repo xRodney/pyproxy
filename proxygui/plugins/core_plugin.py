@@ -4,11 +4,12 @@ from hexdump import hexdump
 
 from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.reporting import LogReport
-from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin
+from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin, TopTabPlugin
 from proxygui.widgets.body_content_viewer import BodyContentViewer
+from proxygui.widgets.http_messages_tree_view import HttpMessagesTreeView
 
 
-class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
+class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TopTabPlugin, TabPlugin):
     def __init__(self):
         super().__init__("Core functionality")
 
@@ -27,6 +28,12 @@ class CorePlugin(Plugin, GridPlugin, ContentViewPlugin, TabPlugin):
             return None
 
         return msg.first_line().decode().split("\r\n")[0] if msg else "Unmatched"
+
+    def get_list_tabs(self):
+        yield self.__list_widget, "List"
+
+    def __list_widget(self, parent):
+        return HttpMessagesTreeView(self.plugin_registry, parent)
 
     def get_tabs(self, rr):
         if rr:

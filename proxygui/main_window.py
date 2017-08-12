@@ -14,7 +14,7 @@ from proxygui.plugins import PLUGINS
 from proxygui.plugins.plugin_registry import PluginRegistry
 from proxygui.widgets.connection_config import ConnectionConfig
 from proxygui.widgets.http_messages_tabs import HttpMessagesTabs
-from proxygui.widgets.http_messages_tree_view import HttpMessagesTreeView
+from proxygui.widgets.top_tabs import TopTabs
 from proxygui.worker import Worker
 
 DEFAULT_PARAMETERS = ProxyParameters("0.0.0.0", 8888, "www.httpwatch.com", 80)
@@ -65,14 +65,14 @@ class MainWindow(QWidget):
         hbox.addWidget(self.stopButton)
         hbox.addWidget(self.restartButton)
 
-        self.treeView = HttpMessagesTreeView(self.plugin_registry, self)
-        self.treeView.selected.connect(self.onMessageSelected)
+        self.top_tabs = TopTabs(self.plugin_registry, self)
+        self.top_tabs.selected.connect(self.onMessageSelected)
 
         self.tabs = HttpMessagesTabs(self.plugin_registry)
 
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
-        vbox.addWidget(self.treeView)
+        vbox.addWidget(self.top_tabs)
         vbox.addWidget(self.tabs)
 
         self.setLayout(vbox)
@@ -117,7 +117,7 @@ class MainWindow(QWidget):
     def getSettingsCallback(self, callback):
         def func():
             callback()
-            self.treeView.refresh()
+            self.top_tabs.refresh()
 
         return func
 
@@ -129,7 +129,7 @@ class MainWindow(QWidget):
 
     def onRestartClicked(self, event):
         self.worker.stop()
-        self.treeView.clear()
+        self.top_tabs.clear()
         self.worker.start()
 
     def onSaveClicked(self, event):
@@ -155,7 +155,7 @@ class MainWindow(QWidget):
 
     def save(self, file_name):
         f = open(file_name, "wb")
-        serialize_message_reports(self.treeView.getAllMessagePairs(), f)
+        serialize_message_reports(self.top_tabs.getAllMessagePairs(), f)
         f.close()
 
     def closeEvent(self, QCloseEvent):
@@ -171,7 +171,7 @@ class MainWindow(QWidget):
         super().closeEvent(QCloseEvent)
 
     def onReceived(self, log: LogReport):
-        self.treeView.onLogChange(log)
+        self.top_tabs.onLogChange(log)
 
     def onError(self, e: Exception):
         msg = QMessageBox()

@@ -1,7 +1,7 @@
 from proxy.parser.http_parser import HttpMessage
 from proxy.pipe.reporting import LogReport
 from proxygui.plugins.abstract_plugins import GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin, \
-    SettingsPlugin
+    SettingsPlugin, TopTabPlugin
 
 
 class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugin):
@@ -21,6 +21,11 @@ class PluginRegistry(GridPlugin, ContentViewPlugin, TabPlugin, SettingsMenuPlugi
     def add_plugin(self, plugin):
         plugin.plugin_registry = self
         self.__plugins.append(plugin)
+
+    def get_list_tabs(self):
+        for plugin in self.__plugins:
+            if isinstance(plugin, TopTabPlugin):
+                yield from plugin.get_list_tabs()
 
     def get_columns(self):
         result = []

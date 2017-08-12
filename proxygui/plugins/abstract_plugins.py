@@ -27,6 +27,11 @@ class ContentViewPlugin(metaclass=ABCMeta):
         pass
 
 
+class TopTabPlugin(metaclass=ABCMeta):
+    @abstractmethod
+    def get_list_tabs(self):
+        pass
+
 class TabPlugin(metaclass=ABCMeta):
     @abstractmethod
     def get_tabs(self, data):

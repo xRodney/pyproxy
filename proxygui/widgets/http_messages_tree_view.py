@@ -41,9 +41,6 @@ class HttpMessagesTreeView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-    def getAllMessagePairs(self):
-        return (item.model for item in self.__index.values())
-
     def clear(self):
         self.model = QStandardItemModel()
         self.filteredModel = FilteredModel(self.plugin_registry)
@@ -78,10 +75,9 @@ class HttpMessagesTreeView(QWidget):
         if data:
             self.selected.emit(data)
 
-    def onLogChange(self, log):
-        new_row = log.guid not in self.__index
+    def onLogChange(self, log, is_new, all_messages):
 
-        if not new_row:
+        if not is_new:
             model_item = self.__index[log.guid]
             branch = model_item.branch
             model_item.model = log
@@ -96,7 +92,7 @@ class HttpMessagesTreeView(QWidget):
             if text:
                 branch[i].setText(text)
 
-        if new_row:
+        if is_new:
             self.rootNode.appendRow(branch)
         self.applyModel()
 
