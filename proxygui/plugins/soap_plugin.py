@@ -9,10 +9,11 @@ from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
 from proxy.pipe.reporting import LogReport
 from proxy.utils import soap2python
 from proxy.utils.soap2python import normalize_tag
-from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin
+from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin, TopTabPlugin
+from proxygui.plugins.soap.SoapCodeGenerator import SoapCodeGenerator
 
 
-class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
+class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin, TopTabPlugin):
     def __init__(self):
         super().__init__("Soap plugin")
         self.filter_non_soap_traffic = True
@@ -27,6 +28,12 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
     def filter_methods_as_string(self, methods):
         self.filter_methods = [m.strip() for m in methods.split(",")]
 
+    def get_list_tabs(self):
+        yield self.soap_code_generator, "SOAP code"
+
+    def soap_code_generator(self, parent):
+        return SoapCodeGenerator(self.plugin_registry, self, parent)
+
     def get_columns(self):
         return (
             ("soap_method", "SOAP method"),
@@ -34,7 +41,7 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
 
     def get_cell_content(self, data, column_id, value):
         if column_id == "soap_method":
-            if not self.__is_soap(data.request):
+            if not self.is_soap(data.request):
                 return "--"
 
             try:
@@ -44,14 +51,14 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
                 return str(ex)
 
     def filter_accepts_row(self, data: LogReport):
-        if not self.__is_soap(data.request):
+        if not self.is_soap(data.request):
             return not self.filter_non_soap_traffic
 
         method = self.__get_method(data.request)
         return method not in self.filter_methods
 
     def get_content_representations(self, data: HttpMessage, context: LogReport):
-        if self.__is_soap(data):
+        if self.is_soap(data):
             yield ("SOAP", self.soap_representation)
 
     def soap_representation(self, data: HttpMessage, context: LogReport, parent_widget):
@@ -61,7 +68,7 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
         body.setFont(font)
 
         try:
-            soap_text = self.__soap_code(data, context)
+            soap_text = self.soap_code(data, context)
             body.setPlainText(soap_text)
         except Exception as ex:
             body.setPlainText(str(ex))
@@ -70,22 +77,25 @@ class SoapPlugin(Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin):
         body.setReadOnly(True)
         return body
 
-    def __soap_code(self, data: HttpMessage, context: LogReport):
+    def soap_code(self, data: HttpMessage, context: LogReport, level=0):
         if isinstance(data, HttpResponse):
             request_element = soap2python.parse_soap_from_string(context.request.body_as_text())
             response_element = soap2python.parse_soap_from_string(context.response.body_as_text())
 
-            soap_text = "@flow.respond_soap("
-            soap_text += soap2python.print_method(request_element, "flow.factory", level=1)
-            soap_text += ")\n"
-            soap_text += "def handle_" + normalize_tag(request_element.tag) + "(self, request):\n"
-            soap_text += "    return " + soap2python.print_method(response_element, "self.flow.factory", level=1)
+            soap_text = "    " * level + "@flow.respond_soap("
+            soap_text += soap2python.print_method(request_element, "flow.factory", level=level + 1)
+            soap_text += "    " * level + ")\n"
+            soap_text += "    " * level + "def handle_" + normalize_tag(request_element.tag) + "(self, request):\n"
+            soap_text += "    " * level + "    return " + soap2python.print_method(response_element,
+                                                                                   "self.flow.factory", level=level + 1)
         else:
             element = soap2python.parse_soap_from_string(data.body_as_text())
             soap_text = soap2python.print_method(element, self.__get_client_for_path(context.request))
         return soap_text
 
-    def __is_soap(self, request):
+    def is_soap(self, request):
+        if request is None:
+            return False
         return b"soap" in request.get_content_type() or (
             b"xml" in request.get_content_type() and "schemas.xmlsoap.org" in request.body_as_text())
 
