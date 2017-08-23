@@ -6,6 +6,8 @@ from proxy.parser.http_parser import HttpResponse
 from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
 from proxy.pipe.recipe.matchers import has_path
 from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
+from suds.sax import Namespace
+from suds.xsd.sxbasic import Sequence, Complex
 
 
 class SoapTransform(Transform):
@@ -175,3 +177,62 @@ class FactoryWrapper():
 
     def __call__(self, *args, **kwargs):
         return dict(**kwargs)
+
+
+def default_response(client, request):
+    selector = getattr(client.service, request.__class__.__name__)
+
+    # TODO: This is alrady done in soap_transform, maybe we could somehow pass the result along the chain?
+    if selector.method is not None:  # Method is not overloaded
+        method = selector.method
+    else:
+        method = selector.get_method(**suds.asdict(request))
+
+    output = method.soap.output
+    response_type = client.wsdl.schema.types[output.name, output.body.namespace[1]]
+    response = __get_default_item(client, response_type)
+
+    return response
+
+
+def __get_default_item(client, type):
+    if isinstance(type, Complex):
+        return __get_default_complex_item(client, type)
+    else:
+        return __get_default_basic_item(client, type)
+
+
+def __get_default_complex_item(client, type):
+    obj = getattr(client.factory, type.name)()
+    if len(type.rawchildren) == 1 and isinstance(type.rawchildren[0], Sequence):
+        __fill_default_sequence(client, type.rawchildren[0], obj)
+    return obj
+
+
+def __fill_default_sequence(client, sequence, target):
+    for el in sequence.rawchildren:
+        obj = __get_default_item(client, el)
+        setattr(target, el.name, obj)
+
+
+def __get_default_basic_item(client, type):
+    if type.default:
+        return type.default
+
+    if Namespace.xsd(type.type):
+        if type.type[0] == 'int':
+            return __get_next()
+        elif type.type[0] == 'string':
+            return "??? {} ???".format(__get_next())
+
+    # TODO: More to come
+    return "???"
+
+
+__counter = 0
+
+
+def __get_next():
+    global __counter
+    __counter += 1
+    return __counter

@@ -6,7 +6,7 @@ from proxy.parser.http_parser import HttpRequest
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.endpoint import Processing
 from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import soap_transform
+from proxy.pipe.recipe.soap import soap_transform, default_response
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
@@ -61,3 +61,28 @@ def test_soap_transform_request():
     assert target_endpoint == "local"
     assert response1.status == b"200"
     assert "return>42</" in response1.body_as_text()
+
+
+def test_default_response():
+    flow = Flow(PARAMETERS)
+
+    realpath = os.path.realpath(__file__)
+    dir = os.path.dirname(realpath)
+    url = 'file://' + dir + "/DuckService2.wsdl"
+    client = suds.client.Client(url)
+
+    soap_flow = flow.transform(soap_transform(client))
+
+    @soap_flow.respond
+    def handle(request):
+        assert isinstance(request, suds.sudsobject.Object)
+        response = default_response(client, request)
+        return response
+
+    processing1 = Processing("local", flow(request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+    text = response1.body_as_text()
+    assert "return>1</" in text

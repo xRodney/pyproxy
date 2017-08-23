@@ -24,6 +24,7 @@ class SoapCodeGenerator(QPlainTextEdit):
     def clear(self):
         self.setPlainText("")
         self.__index_by_path = OrderedDict()
+        self.__index_by_position = {}
 
     def refresh(self):
         pass
