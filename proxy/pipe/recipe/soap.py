@@ -189,21 +189,32 @@ def default_response(client, request):
         method = selector.get_method(**suds.asdict(request))
 
     output = method.soap.output
-    response_type = client.wsdl.schema.types[output.name, output.body.namespace[1]]
-    response = __get_default_item(client, response_type)
+    element = client.wsdl.schema.elements[output.body.parts[0].element]
+    if element.rawchildren:
+        response_type = element.rawchildren[0]
+    else:
+        type = element.cache['resolved:nb=False']  # TODO: What is this?
+        response_type = type.rawchildren[0]
+
+    type_name = element.name
+    response = __get_default_item(client, response_type, type_name)
 
     return response
 
 
-def __get_default_item(client, type):
+def __get_default_item(client, type, name):
     if isinstance(type, Complex):
-        return __get_default_complex_item(client, type)
+        return __get_default_complex_item(client, type, name)
+    elif isinstance(type, Sequence):
+        obj = getattr(client.factory, name)()
+        __fill_default_sequence(client, type, obj)
+        return obj
     else:
         return __get_default_basic_item(client, type)
 
 
-def __get_default_complex_item(client, type):
-    obj = getattr(client.factory, type.name)()
+def __get_default_complex_item(client, type, name):
+    obj = getattr(client.factory, name)()
     if len(type.rawchildren) == 1 and isinstance(type.rawchildren[0], Sequence):
         __fill_default_sequence(client, type.rawchildren[0], obj)
     return obj
@@ -211,7 +222,7 @@ def __get_default_complex_item(client, type):
 
 def __fill_default_sequence(client, sequence, target):
     for el in sequence.rawchildren:
-        obj = __get_default_item(client, el)
+        obj = __get_default_item(client, el, el.name)
         setattr(target, el.name, obj)
 
 
