@@ -142,10 +142,39 @@ def soap_matches_strictly(soap_object):
 
 
 class SoapFlow(TransformingFlow):
-    def __init__(self, client, path, parameters=None):
+    ERROR_RESPONSE = object()
+    DUMMY_RESPONSE = object()
+
+    def __init__(self, client, path, parameters=None, on_mismatch=None):
         super().__init__(SoapTransform(client), parameters)
         self.client = client
         self.matcher = has_path(path)
+
+        if on_mismatch is SoapFlow.ERROR_RESPONSE:
+            self.fallback().respond(self.__error_response)
+        elif on_mismatch is SoapFlow.DUMMY_RESPONSE:
+            self.fallback().respond(self.__dummy_response)
+        elif on_mismatch is not None:
+            raise ValueError("Invalid value of on_mismatch. Can only be None, ERROR_RESPOSE or DUMMY_RESPONSE")
+
+    def __wrap_call(self, wrapped, default_response):
+        def wrapper(request):
+            try:
+                return wrapped(request)
+            except DoesNotAccept:
+                yield default_response(request)
+
+        return wrapper
+
+    def __error_response(self, request):
+        yield from []
+        return HttpResponse(b"500",
+                            b"Unmatched request",
+                            b"The proxy is unable to mock the request")
+
+    def __dummy_response(self, request):
+        yield from []
+        return default_response(self.client, request)
 
     def __call__(self, request):
         if not self.matcher.matches(request):

@@ -1,4 +1,5 @@
 import copy
+import itertools
 
 from hamcrest.core.matcher import Matcher
 from typing import Union, Callable, Any
@@ -33,6 +34,7 @@ class Transform(object):
 class Flow:
     def __init__(self, parameters=None):
         self.__branches = []
+        self.__fallback = None
         self.__parameters = parameters
 
     @property
@@ -63,14 +65,22 @@ class Flow:
         new_flow = copy.copy(self)
         new_flow.__branches = []
         for branch in self.__branches:
-            if hasattr(branch, "_get_branch"):
-                new_flow.__branches.append(branch._get_branch(instance, owner))
-            elif hasattr(branch, "__get__"):
-                new_flow.__branches.append(branch.__get__(instance, owner))
-            else:
-                new_flow.__branches.append(branch)
+            new_flow.__branches.append(self.__bind_branch(branch, instance, owner))
+
+        new_flow.__fallback = self.__bind_branch(self.__fallback, instance, owner)
 
         return new_flow
+
+    @staticmethod
+    def __bind_branch(branch, instance, owner):
+        if branch is None:
+            return None
+        elif hasattr(branch, "_get_branch"):
+            return branch._get_branch(instance, owner)
+        elif hasattr(branch, "__get__"):
+            return branch.__get__(instance, owner)
+        else:
+            return branch
 
     def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
         if callable(matcher):
@@ -85,14 +95,14 @@ class Flow:
 
     def __call__(self, request: HttpRequest):
         excs = []
-        for branch in self.__branches:
+        for branch in itertools.chain(self.__branches, (self.__fallback,)):
             try:
                 response = yield from branch(request)
                 return response
             except DoesNotAccept as e:
                 excs.append(e)
 
-        if not self.__branches:
+        if not self.__branches and not self.__fallback:
             raise DoesNotAccept("The flow has no branches.")
 
         raise DoesNotAccept(excs)
@@ -141,6 +151,17 @@ class Flow:
         self.__branches.append(flow)
         flow.parameters = self.parameters
         return flow
+
+    def fallback(self) -> "Flow":
+        """
+        Fallback flow is a special delegate flow that is called last, only after all other branches reject the request.
+        
+        :return: The fallback flow
+        """
+        if self.__fallback is None:
+            self.__fallback = Flow()
+            self.__fallback.parameters = self.parameters
+        return self.__fallback
 
     def respond_when(self, matcher):
         """

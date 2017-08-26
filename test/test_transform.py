@@ -163,3 +163,30 @@ def test_bound_transform(simple_get_request, simple_delete_request):
 
     assert target_endpoint == "local"
     assert response1.status == b"404"
+
+
+def test_fallback_flow(simple_get_request, simple_delete_request):
+    main_flow = Flow(PARAMETERS)
+
+    class MyHandler:
+        flow = Flow()
+        fallback = flow.fallback().respond(HttpResponse(b"404", b"Not found", b"This is body"))
+
+        @flow.respond_when(has_method(b"GET"))
+        def handle(self, request):
+            return HttpResponse(b"200", b"OK", b"This is body")
+
+    handler = MyHandler()
+    main_flow.delegate(handler.flow)
+
+    processing1 = Processing("local", main_flow(simple_get_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+
+    processing1 = Processing("local", main_flow(simple_delete_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"404"
