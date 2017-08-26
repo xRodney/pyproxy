@@ -1,14 +1,18 @@
 import asyncio
 import collections
+import logging
+import traceback
 
 from proxy.parser import http_parser
-from proxy.parser.http_parser import HttpMessage
+from proxy.parser.http_parser import HttpMessage, HttpResponse
 from proxy.parser.parser_utils import intialize_parser, parse
 from proxy.pipe.logger import logger
 from proxy.pipe.reporting import MessageListener, LogReport
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
+
+logger = logging.getLogger(__name__)
 
 
 class EndpointParameters:
@@ -161,6 +165,19 @@ class Processing:
         except StopIteration as e:
             self.flow = None
             return self.source_endpoint, e.value
+        except Exception as e:
+            self.flow = None
+            trace = traceback.format_exception(e.__class__, e, e.__traceback__)
+            trace = "".join(trace)
+            logger.error(trace)
+
+            header = "Internal proxy error:\n"
+            header += str(e) + "\n\n"
+
+            response = HttpResponse(b"500", b"Internal proxy error",
+                                    body=(header + trace).encode())
+
+            return self.source_endpoint, response
 
     def has_finished(self):
         return self.flow is None
