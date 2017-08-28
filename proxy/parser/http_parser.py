@@ -6,11 +6,22 @@ from proxy.parser.parser_utils import get_bytes, get_word, get_rest, get_until
 CRLF = "\r\n"
 
 
+def _force_bytes(msg):
+    if msg is None:
+        return None
+    if isinstance(msg, bytes):
+        return msg
+    return str(msg).encode()
+
+
 class HttpMessage:
     def __init__(self, body=None, headers=None):
         self.version = b"HTTP/1.1"
-        self.headers = OrderedDict(**headers) if headers else OrderedDict()
-        self.body = body
+        self.headers = OrderedDict()
+        if headers:
+            for k, v in headers.items():
+                self.headers[_force_bytes(k)] = _force_bytes(v)
+        self.body = _force_bytes(body)
         self.__body_as_text = None
         if self.body:
             self.headers.setdefault(b"Content-Length", str(len(self.body)).encode())
@@ -32,7 +43,6 @@ class HttpMessage:
             part = part.strip(b" ").split(b"=")
             if len(part) == 2 and part[0] == b"charset":
                 return part[1]
-
 
     def __str__(self):
         data = self.first_line().decode()
@@ -87,8 +97,8 @@ class HttpMessage:
 class HttpRequest(HttpMessage):
     def __init__(self, method=None, path=None, body=None, headers=None):
         super().__init__(body=body, headers=headers)
-        self.method = method
-        self.path = path
+        self.method = _force_bytes(method)
+        self.path = _force_bytes(path)
 
     def has_body(self):
         return self.method in (b"POST", b"PUT", b"PATCH")
@@ -100,8 +110,8 @@ class HttpRequest(HttpMessage):
 class HttpResponse(HttpMessage):
     def __init__(self, status=None, status_message=None, body=None, headers=None):
         super().__init__(body=body, headers=headers)
-        self.status = status
-        self.status_message = status_message
+        self.status = _force_bytes(status)
+        self.status_message = _force_bytes(status_message)
 
     def has_body(self):
         if b"Content-Length" in self.headers:

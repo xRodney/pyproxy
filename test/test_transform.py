@@ -14,12 +14,12 @@ PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
 @pytest.fixture
 def simple_get_request():
-    return HttpRequest(b"GET", b"/", headers={b"Host": b"localhost"})
+    return HttpRequest("GET", "/", headers={"Host": "localhost"})
 
 
 @pytest.fixture
 def response_302():
-    return HttpResponse(b"302", b"Found", headers={b"Location": b"http://remotehost.com"})
+    return HttpResponse("302", "Found", headers={"Location": "http://remotehost.com"})
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ def test_pass_through(simple_get_request):
 
 def test_respond_lambda(simple_get_request):
     flow = Flow(PARAMETERS)
-    flow.respond(lambda request: HttpResponse(b"200", b"OK", b"This is body"))
+    flow.respond(lambda request: HttpResponse("200", "OK", "This is body"))
 
     processing = Processing("local", flow(simple_get_request))
 
