@@ -99,12 +99,38 @@ class HttpRequest(HttpMessage):
         super().__init__(body=body, headers=headers)
         self.method = _force_bytes(method)
         self.path = _force_bytes(path)
+        self.__path_query = None
 
     def has_body(self):
         return self.method in (b"POST", b"PUT", b"PATCH")
 
     def first_line(self):
         return b"%s %s %s\r\n" % (self.method, self.path, self.version)
+
+    @property
+    def path_query(self):
+        if self.__path_query is not None:
+            return self.__path_query
+
+        self.__path_query = {}
+
+        query = self.path.partition(b"?")
+        if not query[2]:
+            return self.__path_query
+
+        key_values = query[2].split(b"&")
+        for key_value in key_values:
+            key, _, value = key_value.partition(b"=")
+            if key[-2:] == b"[]":
+                key = key[:-2]
+                if key in self.__path_query:
+                    self.__path_query[key].append(value)
+                else:
+                    self.__path_query[key] = [value]
+            else:
+                self.__path_query[key] = value
+
+        return self.__path_query
 
 
 class HttpResponse(HttpMessage):

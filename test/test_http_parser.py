@@ -234,3 +234,23 @@ def test_minimal_request():
     parsed_messages = list(parse(parser, request_bytes))
 
     assert len(parsed_messages) == 1
+
+
+def test_path_query_empty():
+    request = HttpRequest(path=b"some/path")
+    assert request.path_query == {}
+
+
+def test_path_query_simple():
+    request = HttpRequest(path=b"some/path?aa=bb")
+    assert request.path_query == {b"aa": b"bb"}
+
+
+def test_path_query_array():
+    request = HttpRequest(path=b"some/path?aa=bb&arr[]=1")
+    assert request.path_query == {b"aa": b"bb", b"arr": [b"1"]}
+
+
+def test_path_query_array2():
+    request = HttpRequest(path=b"some/path?aa=bb&arr[]=1&arr[]=2")
+    assert request.path_query == {b"aa": b"bb", b"arr": [b"1", b"2"]}
