@@ -54,6 +54,23 @@ class HasPath(BaseMatcher):
         return message.path == self.path
 
 
+def has_path_starting(path):
+    return HasPathStarting(path)
+
+
+class HasPathStarting(BaseMatcher):
+    def __init__(self, path):
+        self.path = path
+        if isinstance(self.path, str):
+            self.path = self.path.encode()
+
+    def _matches(self, message: HttpRequest):
+        if not isinstance(message, HttpRequest):
+            return False
+
+        return message.path[:len(self.path)] == self.path
+
+
 def has_method(method):
     return HasMethod(method)
 
