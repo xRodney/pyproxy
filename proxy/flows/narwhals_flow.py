@@ -2,7 +2,7 @@ import os
 
 import suds.sudsobject
 from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import soap_transform, SoapFlow, default_response
+from proxy.pipe.recipe.soap import SoapFlow, default_response
 
 
 def register_flow(flow: Flow):
@@ -14,7 +14,6 @@ realpath = os.path.realpath(__file__)
 dir = os.path.dirname(realpath)
 url = 'file://' + dir + "/Narwhals.wsdl"
 client = suds.client.Client(url)
-duck_soap_transform = soap_transform(client)
 
 
 class NarwhalsService:
