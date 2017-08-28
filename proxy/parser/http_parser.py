@@ -113,6 +113,10 @@ class HttpResponse(HttpMessage):
         self.status = _force_bytes(status)
         self.status_message = _force_bytes(status_message)
 
+    @staticmethod
+    def ok(body, headers=None):
+        return HttpResponse(b"200", b"Ok", body, headers)
+
     def has_body(self):
         if b"Content-Length" in self.headers:
             return True
