@@ -151,13 +151,6 @@ _error_response = HttpResponse(b"500",
                                b"The proxy is unable to mock the request")
 
 
-def _make_static(method):
-    method.__get__ = lambda *args: method
-    return method
-
-
-def _dummy_response(client, request):
-    return default_response(client, request)
 
 
 class SoapFlow(TransformingFlow):
@@ -172,9 +165,13 @@ class SoapFlow(TransformingFlow):
         if on_mismatch is SoapFlow.ERROR_RESPONSE:
             self.fallback().respond(_error_response)
         elif on_mismatch is SoapFlow.DUMMY_RESPONSE:
-            self.fallback().respond(_make_static(lambda request: _dummy_response(client, request)))
+            self.fallback().respond(self.__dummy_response)
         elif on_mismatch is not None:
             raise ValueError("Invalid value of on_mismatch. Can only be None, ERROR_RESPOSE or DUMMY_RESPONSE")
+
+    def __dummy_response(self, service, request=None):
+        request = request if request is not None else service
+        return default_response(self.client, request)
 
     def __wrap_call(self, wrapped, default_response):
         def wrapper(request):

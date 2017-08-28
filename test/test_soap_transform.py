@@ -111,7 +111,11 @@ def test_default_response1():
     assert target_endpoint == "local"
     assert response1.status == b"200"
     text = response1.body_as_text()
-    assert "return>1</" in text
+
+    binding = Document(client.wsdl)
+    method = client.service.duckAdd.method
+    parsed = binding.get_reply(method, text)
+    assert isinstance(parsed[1], int)
 
 
 def test_default_response2():
@@ -133,7 +137,11 @@ def test_default_response2():
     assert target_endpoint == "local"
     assert response1.status == b"200"
     text = response1.body_as_text()
-    assert ":LoginResult>???" in text
+
+    binding = Document(client.wsdl)
+    method = client.service.Login.method
+    parsed = binding.get_reply(method, text)
+    assert "???" in parsed[1]
 
 
 def test_default_response3():
@@ -176,9 +184,6 @@ def test_default_response3():
     text = response1.body_as_text()
 
     binding = Document(client.wsdl)
-
     method = client.service.ViewRequest.method
-
     parsed = binding.get_reply(method, text)
-
     assert parsed[1].Notes.NoteInfo[0].Created
