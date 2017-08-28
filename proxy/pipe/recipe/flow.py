@@ -95,7 +95,9 @@ class Flow:
 
     def __call__(self, request: HttpRequest):
         excs = []
-        for branch in itertools.chain(self.__branches, (self.__fallback,)):
+
+        fallbacks = (self.__fallback,) if self.__fallback else ()
+        for branch in itertools.chain(self.__branches, fallbacks):
             try:
                 response = yield from branch(request)
                 return response
