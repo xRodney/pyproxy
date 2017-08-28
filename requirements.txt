@@ -4,4 +4,4 @@ hexdump==3.3
 PyQt5==5.8.2
 PyHamcrest
 six
-git+https://github.com/xRodney/suds-ng
+suds-sw==0.4.3

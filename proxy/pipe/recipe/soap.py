@@ -5,7 +5,7 @@ import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
 from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
 from proxy.pipe.recipe.matchers import has_path
-from proxy.pipe.recipe.suds_binding import ServerDocumentBinding
+from suds.bindings.document import Document
 from suds.sax import Namespace
 from suds.xsd.sxbasic import Sequence, Complex
 
@@ -13,7 +13,7 @@ from suds.xsd.sxbasic import Sequence, Complex
 class SoapTransform(Transform):
     def __init__(self, client):
         self.client = client
-        self.binding = ServerDocumentBinding(self.client.wsdl)
+        self.binding = Document(self.client.wsdl)
 
     def __is_soap(self, request):
         return b"soap" in request.get_content_type() or (
@@ -35,7 +35,7 @@ class SoapTransform(Transform):
 
         method = selector.method
 
-        xml, soap = self.binding.parse_message(method, messageroot, soapbody, input=True)
+        soap = self.binding.parse_message(method, messageroot, soapbody, input=True)
 
         response = yield from next_in_chain(soap)
 
