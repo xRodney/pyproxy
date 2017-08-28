@@ -17,7 +17,7 @@ class SoapTransform(Transform):
 
     def __is_soap(self, request):
         return b"soap" in request.get_content_type() or (
-            b"xml" in request.get_content_type() and "schemas.xmlsoap.org" in request.body_as_text())
+            b"xml" in request.get_content_type() and "Envelope" in request.body_as_text())
 
     def transform(self, request, proxy: "Flow", next_in_chain):
         if not self.__is_soap(request):
