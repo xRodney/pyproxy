@@ -16,6 +16,9 @@ class FlowDefinition:
     def default_flow(self, request):
         yield from []
 
+    def reset(self):
+        pass
+
 
 class Dispatcher:
     def __init__(self, flow_definition: FlowDefinition):
@@ -71,6 +74,7 @@ class Server:
         self.servers = []
 
     async def start(self):
+        self.flow_definition.reset()
         endpoints = list(self.flow_definition.endpoints())
         try:
             self.servers = []

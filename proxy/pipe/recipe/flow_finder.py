@@ -1,14 +1,16 @@
-from functools import lru_cache
+import logging
 
 from proxy.pipe.importing import import_submodules
 from proxy.pipe.recipe.flow import Flow
 
+logger = logging.getLogger(__name__)
 
-@lru_cache()
 def _find_flows(module):
+    logger.info("Loading flows from files")
     modules = import_submodules(module)
     prioritized = [(name, mod) for name, mod in modules.items()]
     prioritized.sort(key=lambda tup: tup[0])
+    logger.info("Flows loaded")
     return prioritized
 
 

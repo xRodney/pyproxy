@@ -14,7 +14,7 @@ from proxy.pipe.communication import FlowDefinition, Server
 from proxy.pipe.endpoint import InputEndpoint, OutputEndpoint, Endpoint, InputEndpointParameters, EndpointParameters
 from proxy.pipe.logger import logger
 from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.recipe_finder import register_flows
+from proxy.pipe.recipe.flow_finder import register_flows
 from proxy.pipe.reporting import MessageListener
 
 BUFFER_SIZE = 65536
@@ -108,6 +108,9 @@ class ProxyFlowDefinition(FlowDefinition):
             self.parameters.local_address, self.parameters.local_port, self.listener))
         yield OutputEndpoint("remote", EndpointParameters(
             self.parameters.remote_address, self.parameters.remote_port))
+
+    def reset(self):
+        self.__flow = None
 
 
 if __name__ == '__main__':
