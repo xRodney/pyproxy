@@ -17,7 +17,7 @@ client = suds.client.Client(url)
 
 
 class NarwhalsService:
-    flow = SoapFlow(client, "/MSMWebService/WebService.asmx")
+    flow = SoapFlow(client, "/narwhals/WebService.asmx")
 
     def __init__(self):
         self.counter = 42

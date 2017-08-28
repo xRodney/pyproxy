@@ -6,7 +6,8 @@ from proxy.parser.http_parser import HttpRequest
 from proxy.pipe.apipe import ProxyParameters
 from proxy.pipe.endpoint import Processing
 from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import soap_transform, default_response
+from proxy.pipe.recipe.soap import soap_transform, default_response, SoapFlow
+from suds.bindings.document import Document
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
@@ -37,7 +38,7 @@ request = HttpRequest(b'POST', b'/DuckService2',
                            b'</soap:Envelope>'
                       )
 
-narwhals_request = HttpRequest(b'POST', b'/MSMWebService/WebService.asmx',
+narwhals_request = HttpRequest(b'POST', b'/narwhals/WebService.asmx',
                                headers={
                                    b'Accept-Encoding': b'gzip,deflate',
                                    b'Content-Type': b'text/xml;charset=UTF-8',
@@ -121,13 +122,10 @@ def test_default_response2():
     url = 'file://' + dir + "/Narwhals.wsdl"
     client = suds.client.Client(url)
 
-    soap_flow = flow.transform(soap_transform(client))
+    class Service:
+        flow = SoapFlow(client, b'/narwhals/WebService.asmx', on_mismatch=SoapFlow.DUMMY_RESPONSE)
 
-    @soap_flow.respond
-    def handle(request):
-        assert isinstance(request, suds.sudsobject.Object)
-        response = default_response(client, request)
-        return response
+    flow.delegate(Service().flow)
 
     processing1 = Processing("local", flow(narwhals_request))
     target_endpoint, response1 = processing1.send_message(None)
@@ -136,3 +134,51 @@ def test_default_response2():
     assert response1.status == b"200"
     text = response1.body_as_text()
     assert ":LoginResult>???" in text
+
+
+def test_default_response3():
+    flow = Flow(PARAMETERS)
+
+    realpath = os.path.realpath(__file__)
+    dir = os.path.dirname(realpath)
+    url = 'file://' + dir + "/Narwhals.wsdl"
+    client = suds.client.Client(url)
+
+    flow.delegate(SoapFlow(client, b"/narwhals/WebService.asmx", on_mismatch=SoapFlow.DUMMY_RESPONSE))
+
+    request = HttpRequest(b'POST', b'/narwhals/WebService.asmx',
+                          headers={
+                              b'Accept-Encoding': b'gzip,deflate',
+                              b'Content-Type': b'text/xml;charset=UTF-8',
+                              b'SOAPAction': b'"http://narwhals.example.com/ViewRequest"',
+                              b'Content-Length': b'357',
+                              b'Host': b'localhost:8889',
+                              b'Connection': b'Keep-Alive',
+                              b'User-Agent': b'Apache-HttpClient/4.1.1 (java 1.5)',
+                          },
+                          body=b'<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:nar="http://narwhals.example.com">\n'
+                               b'   <soapenv:Header/>\n'
+                               b'   <soapenv:Body>\n'
+                               b'      <nar:ViewRequest>\n'
+                               b'         <!--Optional:-->\n'
+                               b'         <nar:sessionKey>?</nar:sessionKey>\n'
+                               b'         <nar:requestId>123</nar:requestId>\n'
+                               b'      </nar:ViewRequest>\n'
+                               b'   </soapenv:Body>\n'
+                               b'</soapenv:Envelope>'
+                          )
+
+    processing1 = Processing("local", flow(request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+    text = response1.body_as_text()
+
+    binding = Document(client.wsdl)
+
+    method = client.service.ViewRequest.method
+
+    parsed = binding.get_reply(method, text)
+
+    assert parsed[1].Notes.NoteInfo[0].Created

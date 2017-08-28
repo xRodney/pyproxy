@@ -1,3 +1,6 @@
+import datetime
+import random
+
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest.core.matcher import Matcher
 
@@ -7,7 +10,9 @@ from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingF
 from proxy.pipe.recipe.matchers import has_path
 from suds.bindings.document import Document
 from suds.sax import Namespace
-from suds.xsd.sxbasic import Sequence, Complex
+from suds.xsd.sxbase import XBuiltin
+from suds.xsd.sxbasic import Sequence, Complex, Element
+from suds.xsd.sxbuiltin import Factory, XInteger, XString, XDateTime, XDate
 
 
 class SoapTransform(Transform):
@@ -146,8 +151,13 @@ _error_response = HttpResponse(b"500",
                                b"The proxy is unable to mock the request")
 
 
-def _dummy_response(self, request):
-    return default_response(self.flow.client, request)
+def _make_static(method):
+    method.__get__ = lambda *args: method
+    return method
+
+
+def _dummy_response(client, request):
+    return default_response(client, request)
 
 
 class SoapFlow(TransformingFlow):
@@ -162,7 +172,7 @@ class SoapFlow(TransformingFlow):
         if on_mismatch is SoapFlow.ERROR_RESPONSE:
             self.fallback().respond(_error_response)
         elif on_mismatch is SoapFlow.DUMMY_RESPONSE:
-            self.fallback().respond(_dummy_response)
+            self.fallback().respond(_make_static(lambda request: _dummy_response(client, request)))
         elif on_mismatch is not None:
             raise ValueError("Invalid value of on_mismatch. Can only be None, ERROR_RESPOSE or DUMMY_RESPONSE")
 
@@ -218,13 +228,23 @@ def default_response(client, request):
 
     output = method.soap.output
     element = client.wsdl.schema.elements[output.body.parts[0].element]
+
+    return __get_default_element(client, element)
+
+
+def __get_default_element(client, element):
     if element.rawchildren:
-        response_type = element.rawchildren[0]
+        rawchildren = element.rawchildren
     else:
         type = element.cache['resolved:nb=False']  # TODO: What is this?
-        response_type = type.rawchildren[0]
+        rawchildren = type.rawchildren
 
-    type_name = element.name
+    if not rawchildren:
+        return __get_default_basic_item(client, type)
+
+    response_type = rawchildren[0]
+
+    type_name = element.type[0] if element.type else element.name
     response = __get_default_item(client, response_type, type_name)
 
     return response
@@ -237,6 +257,8 @@ def __get_default_item(client, type, name):
         obj = getattr(client.factory, name)()
         __fill_default_sequence(client, type, obj)
         return obj
+    elif isinstance(type, Element):
+        return __get_default_element(client, type)
     else:
         return __get_default_basic_item(client, type)
 
@@ -258,17 +280,27 @@ def __get_default_basic_item(client, type):
     if type.default:
         return type.default
 
-    if Namespace.xsd(type.type):
-        if type.type[0] == 'int':
-            return __get_next()
-        elif type.type[0] == 'string':
-            return "??? {} ???".format(__get_next())
+    if Namespace.xsd(type.type) or Namespace.xsd(type):
+        clazz = Factory.tags.get(type.type[0])
+    elif isinstance(type, XBuiltin):
+        clazz = type.__class__
+    else:
+        clazz = None
 
-    # TODO: More to come
-    return "???"
+    if clazz == XInteger:
+        return __get_next()
+    elif clazz == XString:
+        return "??? {} ???".format(__get_next())
+    elif clazz == XDateTime:
+        return datetime.datetime.utcfromtimestamp(__get_next())
+    elif clazz == XDate:
+        return datetime.datetime.utcfromtimestamp(__get_next())
+    else:
+        # TODO: More to come
+        return __get_next()
 
 
-__counter = 0
+__counter = random.randrange(100000)
 
 
 def __get_next():
