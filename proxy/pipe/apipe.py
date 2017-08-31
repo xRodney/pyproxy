@@ -113,7 +113,7 @@ class ProxyFlowDefinition(FlowDefinition):
         self.__flow = None
 
 
-if __name__ == '__main__':
+def main():
     try:
         if (len(sys.argv) != 3):
             raise Exception("arguments")
@@ -131,3 +131,7 @@ if __name__ == '__main__':
             loop.run_forever()
         except KeyboardInterrupt:
             pass
+
+
+if __name__ == '__main__':
+    main()
