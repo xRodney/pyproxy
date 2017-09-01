@@ -184,6 +184,9 @@ def print_args(element, api_name, level=1):
         elif child.text:
             output += translate_value(child.text, level)
             output += ""
+        elif child.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'xsd:string' and \
+                        child.get('{http://www.w3.org/2001/XMLSchema-instance}nil') != "true":
+            output += "\"\""
         else:
             output += "None"
 
