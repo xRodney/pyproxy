@@ -1,10 +1,15 @@
 import asyncio
+import traceback
 
 from typing import Union, Iterable
 
-from proxy.parser.http_parser import HttpMessage
+import logging
+
+from proxy.parser.http_parser import HttpMessage, HttpResponse
 from proxy.pipe.endpoint import Endpoint, InputEndpoint, OutputEndpoint
 
+
+logger = logging.getLogger(__name__)
 
 class FlowDefinition:
     def endpoints(self) -> Iterable[Endpoint]:
@@ -43,13 +48,28 @@ class Dispatcher:
         await target_endpoint.send(message_to_send, processing)
 
     async def handle_client(self, endpoint_name, reader, writer):
-        flow = self.flow_definition.get_flow(endpoint_name)
-        await self.endpoints[endpoint_name].connection_opened(reader, writer, flow)
-        for endpoint in self.endpoints.values():
-            if isinstance(endpoint, OutputEndpoint):
-                await endpoint.open_connection()
+        try:
+            flow = self.flow_definition.get_flow(endpoint_name)
+            await self.endpoints[endpoint_name].connection_opened(reader, writer, flow)
+            for endpoint in self.endpoints.values():
+                if isinstance(endpoint, OutputEndpoint):
+                    await endpoint.open_connection()
 
-        await self.loop()
+            await self.loop()
+        except Exception as e:
+            trace = traceback.format_exception(e.__class__, e, e.__traceback__)
+            trace = "".join(trace)
+            logger.error(trace)
+
+            header = "Internal proxy error:\n"
+            header += str(e) + "\n\n"
+
+            response = HttpResponse(b"500", b"Internal proxy error",
+                                    body=(header + trace).encode())
+
+            for b in response.to_bytes():
+                writer.write(b)
+            await writer.drain()
 
     async def loop(self):
         try:
