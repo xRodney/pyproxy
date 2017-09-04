@@ -1,5 +1,7 @@
 import datetime
+import logging
 import random
+import traceback
 
 from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest.core.matcher import Matcher
@@ -8,11 +10,15 @@ import suds.sudsobject
 from proxy.parser.http_parser import HttpResponse
 from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
 from proxy.pipe.recipe.matchers import has_path
+from suds.bindings.binding import envns
 from suds.bindings.document import Document
 from suds.sax import Namespace
+from suds.sax.element import Element as SaxElement
 from suds.xsd.sxbase import XBuiltin
 from suds.xsd.sxbasic import Sequence, Complex, Element
 from suds.xsd.sxbuiltin import Factory, XInteger, XString, XDateTime, XDate
+
+logger = logging.getLogger(__name__)
 
 
 class SoapTransform(Transform):
@@ -42,14 +48,31 @@ class SoapTransform(Transform):
 
         soap = self.binding.parse_message(method, messageroot, soapbody, input=True)
 
-        response = yield from next_in_chain(soap)
+        try:
+            response = yield from next_in_chain(soap)
 
-        if isinstance(response, HttpResponse):
-            return response
+            if isinstance(response, HttpResponse):
+                return response
+
+            xml = self.binding.write_reply(method, response)
+
+        except Exception as e:
+            trace = traceback.format_exception(e.__class__, e, e.__traceback__)
+            trace = "".join(trace)
+            logger.error(trace)
+
+            xml = SaxElement("Envelope", ns=envns)
+            body = SaxElement("Body", ns=envns)
+            fault = SaxElement("Fault", ns=envns)
+            body.append(fault)
+            xml.append(body)
+
+            fault.append(SaxElement("faultcode").setText("Server"))
+            fault.append(SaxElement("faultstring").setText(trace))
+
 
         http_response = HttpResponse(b"200", b"OK")
 
-        xml = self.binding.write_reply(method, response)
         http_response.body = xml.str().encode()
 
         http_response.headers[b'Content-Type'] = b'text/xml; charset=utf-8'
@@ -188,7 +211,21 @@ class SoapFlow(TransformingFlow):
         return super().__call__(request)
 
     def respond_soap(self, soap_object):
-        matcher = soap_matches_loosely(soap_object)
+        if isinstance(soap_object, suds.sudsobject.Object):
+            obj = soap_object
+        elif callable(soap_object) and hasattr(soap_object, "_item"):
+            obj = soap_object()
+        else:
+            name = soap_object.__name__
+            if name not in self.factory:
+                if name.startswith("handle_"):
+                    name = name[7:]
+                elif name.startswith("do_"):
+                    name = name[3:]
+
+            obj = self.factory[name]()
+
+        matcher = soap_matches_loosely(obj)
         return self.when(matcher).respond
 
     def respond_soap_strict(self, soap_object):
