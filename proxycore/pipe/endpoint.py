@@ -3,11 +3,11 @@ import collections
 import logging
 import traceback
 
-from proxy.parser import http_parser
-from proxy.parser.http_parser import HttpMessage, HttpResponse
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.logger import logger
-from proxy.pipe.reporting import MessageListener, LogReport
+from proxycore.parser import http_parser
+from proxycore.parser.http_parser import HttpMessage, HttpResponse
+from proxycore.parser.parser_utils import intialize_parser, parse
+from proxycore.pipe.logger import logger
+from proxycore.pipe.reporting import MessageListener, LogReport
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5

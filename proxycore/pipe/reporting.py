@@ -1,7 +1,7 @@
 import uuid
 from collections import OrderedDict
 
-from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
+from proxycore.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
 
 
 class RequestResponse:

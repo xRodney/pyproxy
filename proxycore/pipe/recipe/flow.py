@@ -4,8 +4,8 @@ import itertools
 from hamcrest.core.matcher import Matcher
 from typing import Union, Callable, Any
 
-from proxy.parser.http_parser import HttpResponse, HttpRequest
-from proxy.pipe.recipe.matchers import LambdaMatcher
+from proxycore.parser.http_parser import HttpResponse, HttpRequest
+from proxycore.pipe.recipe.matchers import LambdaMatcher
 
 
 class DoesNotAccept(Exception):

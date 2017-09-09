@@ -5,10 +5,10 @@ from PyQt5.QtGui import QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPlainTextEdit, QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, \
     QVBoxLayout, QHBoxLayout, QTreeView, QWidget
 
-from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
-from proxy.pipe.reporting import LogReport
-from proxy.utils import soap2python
-from proxy.utils.soap2python import normalize_tag
+from proxycore.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
+from proxycore.pipe.reporting import LogReport
+from proxycore.utils import soap2python
+from proxycore.utils.soap2python import normalize_tag
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, SettingsMenuPlugin, TopTabPlugin
 from proxygui.plugins.soap.SoapCodeGenerator import SoapCodeGenerator
 

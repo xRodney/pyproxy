@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from proxy.pipe.reporting import LogReport
+from proxycore.pipe.reporting import LogReport
 
 
 class Plugin:

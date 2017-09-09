@@ -1,4 +1,4 @@
-from proxy.pipe.endpoint import OutputEndpoint
+from proxycore.pipe.endpoint import OutputEndpoint
 
 
 class TestWriter:

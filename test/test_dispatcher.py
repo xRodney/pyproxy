@@ -1,8 +1,8 @@
 import pytest
 
-from proxy.parser.http_parser import HttpRequest, HttpResponse
-from proxy.pipe.communication import Dispatcher, FlowDefinition
-from proxy.pipe.endpoint import InputEndpoint, InputEndpointParameters
+from proxycore.parser.http_parser import HttpRequest, HttpResponse
+from proxycore.pipe.communication import Dispatcher, FlowDefinition
+from proxycore.pipe.endpoint import InputEndpoint, InputEndpointParameters
 from test.dummy_io import TestWriter, TestReader, TestOutputEndpoint
 
 

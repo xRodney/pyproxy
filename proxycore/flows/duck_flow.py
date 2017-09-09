@@ -1,9 +1,9 @@
 import os
 
 import suds.sudsobject
-from proxy.parser.http_parser import HttpResponse
-from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import soap_transform, SoapFlow
+from proxycore.parser.http_parser import HttpResponse
+from proxycore.pipe.recipe.flow import Flow
+from proxycore.pipe.recipe.soap import soap_transform, SoapFlow
 
 
 def register_flow(flow: Flow):

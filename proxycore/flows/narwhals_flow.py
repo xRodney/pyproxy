@@ -1,8 +1,8 @@
 import os
 
 import suds.sudsobject
-from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import SoapFlow, default_response
+from proxycore.pipe.recipe.flow import Flow
+from proxycore.pipe.recipe.soap import SoapFlow, default_response
 
 
 def register_flow(flow: Flow):

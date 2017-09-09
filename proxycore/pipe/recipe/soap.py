@@ -7,9 +7,9 @@ from hamcrest.core.base_matcher import BaseMatcher
 from hamcrest.core.matcher import Matcher
 
 import suds.sudsobject
-from proxy.parser.http_parser import HttpResponse
-from proxy.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
-from proxy.pipe.recipe.matchers import has_path
+from proxycore.parser.http_parser import HttpResponse
+from proxycore.pipe.recipe.flow import Transform, Flow, DoesNotAccept, TransformingFlow
+from proxycore.pipe.recipe.matchers import has_path
 from suds.bindings.binding import envns
 from suds.bindings.document import Document
 from suds.sax import Namespace

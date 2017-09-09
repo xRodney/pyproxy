@@ -35,7 +35,7 @@
 
             <xs:complexType name="duckAddResponse">
                 <xs:sequence>
-                    <xs:element name="return" type="xs:int"/>
+                    <xs:element name="result" type="xs:int"/>
                 </xs:sequence>
             </xs:complexType>
 
@@ -49,7 +49,7 @@
 
             <xs:complexType name="duckListResponse">
                 <xs:sequence>
-                    <xs:element maxOccurs="unbounded" name="return" type="tns:duck"/>
+                    <xs:element maxOccurs="unbounded" name="result" type="tns:duck"/>
                 </xs:sequence>
             </xs:complexType>
 

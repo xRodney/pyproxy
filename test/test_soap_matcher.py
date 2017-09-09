@@ -1,7 +1,7 @@
-import suds
 from hamcrest import greater_than
 
-from proxy.pipe.recipe.soap import SoapMatches
+import suds
+from proxycore.pipe.recipe.soap import SoapMatches
 
 
 def test_list_matcher():

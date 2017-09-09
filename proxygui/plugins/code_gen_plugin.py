@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTextEdit
 
-from proxy.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
-from proxy.pipe.reporting import LogReport
+from proxycore.parser.http_parser import HttpMessage, HttpRequest, HttpResponse
+from proxycore.pipe.reporting import LogReport
 from proxygui.plugins.abstract_plugins import Plugin, ContentViewPlugin
 
 

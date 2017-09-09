@@ -1,6 +1,6 @@
 from hamcrest.core.base_matcher import BaseMatcher
 
-from proxy.parser.http_parser import HttpMessage, HttpRequest
+from proxycore.parser.http_parser import HttpMessage, HttpRequest
 
 
 class HasHeader(BaseMatcher):

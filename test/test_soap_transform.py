@@ -2,11 +2,11 @@ import os
 
 import suds
 import suds.sudsobject
-from proxy.parser.http_parser import HttpRequest
-from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.endpoint import Processing
-from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.soap import soap_transform, default_response, SoapFlow
+from proxycore.parser.http_parser import HttpRequest
+from proxycore.pipe.apipe import ProxyParameters
+from proxycore.pipe.endpoint import Processing
+from proxycore.pipe.recipe.flow import Flow
+from proxycore.pipe.recipe.soap import soap_transform, default_response, SoapFlow
 from suds.bindings.document import Document
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
@@ -77,8 +77,7 @@ def test_soap_transform_request():
     @soap_flow.respond
     def handle(request):
         assert isinstance(request, suds.sudsobject.Object)
-        response = client.factory.duckAddResponse()
-        setattr(response, "return", 42)
+        response = client.factory.duckAddResponse(result=42)
         return response
 
     processing1 = Processing("local", flow(request))
@@ -86,7 +85,7 @@ def test_soap_transform_request():
 
     assert target_endpoint == "local"
     assert response1.status == b"200"
-    assert "return>42</" in response1.body_as_text()
+    assert "result>42</" in response1.body_as_text()
 
 
 def test_default_response1():
@@ -187,3 +186,68 @@ def test_default_response3():
     method = client.service.ViewRequest.method
     parsed = binding.get_reply(method, text)
     assert parsed[1].Notes.NoteInfo[0].Created
+
+
+def test_soap_matches_instance():
+    flow = Flow(PARAMETERS)
+
+    realpath = os.path.realpath(__file__)
+    dir = os.path.dirname(realpath)
+    url = 'file://' + dir + "/DuckService2.wsdl"
+    client = suds.client.Client(url)
+
+    class Service:
+        flow = SoapFlow(client, b'/DuckService2')
+
+        @flow.respond_soap(flow.factory.duckAdd())
+        def name_does_not_matter(self, request):
+            return self.flow.factory.duckAddResponse(
+                result=115
+            )
+
+    flow.delegate(Service().flow)
+
+    processing1 = Processing("local", flow(request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+    text = response1.body_as_text()
+
+    binding = Document(client.wsdl)
+    method = client.service.duckAdd.method
+    _, parsed = binding.get_reply(method, text)
+    assert parsed == 115
+
+
+def test_soap_matches_method():
+    flow = Flow(PARAMETERS)
+
+    realpath = os.path.realpath(__file__)
+    dir = os.path.dirname(realpath)
+    url = 'file://' + dir + "/DuckService2.wsdl"
+    client = suds.client.Client(url)
+
+    class Service:
+        flow = SoapFlow(client, b'/DuckService2')
+        xx = flow.factory.duckAdd
+
+        @flow.respond_soap(flow.factory.duckAdd)
+        def name_does_not_matter(self, request):
+            return self.flow.factory.duckAddResponse(
+                result=115
+            )
+
+    flow.delegate(Service().flow)
+
+    processing1 = Processing("local", flow(request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+    text = response1.body_as_text()
+
+    binding = Document(client.wsdl)
+    method = client.service.duckAdd.method
+    _, parsed = binding.get_reply(method, text)
+    assert parsed == 115

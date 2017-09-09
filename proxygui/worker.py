@@ -1,8 +1,8 @@
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from proxy.pipe import apipe
-from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.reporting import MessageListener, LogReport
+from proxycore.pipe import apipe
+from proxycore.pipe.apipe import ProxyParameters
+from proxycore.pipe.reporting import MessageListener, LogReport
 
 
 class Worker(QObject, MessageListener):

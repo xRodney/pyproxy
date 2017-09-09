@@ -1,13 +1,13 @@
 import pytest
 
-from proxy.flows import zz_default_recipe
-from proxy.parser import http_parser
-from proxy.parser.http_parser import HttpResponse, HttpRequest
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.endpoint import ProcessingFinishedError, Processing
-from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.matchers import has_method
+from proxycore.flows import zz_default_recipe
+from proxycore.parser import http_parser
+from proxycore.parser.http_parser import HttpResponse, HttpRequest
+from proxycore.parser.parser_utils import intialize_parser, parse
+from proxycore.pipe.apipe import ProxyParameters
+from proxycore.pipe.endpoint import ProcessingFinishedError, Processing
+from proxycore.pipe.recipe.flow import Flow
+from proxycore.pipe.recipe.matchers import has_method
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 

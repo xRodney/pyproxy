@@ -2,8 +2,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QLabel
 from hexdump import hexdump
 
-from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.reporting import LogReport
+from proxycore.parser.http_parser import HttpMessage
+from proxycore.pipe.reporting import LogReport
 from proxygui.plugins.abstract_plugins import Plugin, GridPlugin, ContentViewPlugin, TabPlugin, TopTabPlugin
 from proxygui.widgets.body_content_viewer import BodyContentViewer
 from proxygui.widgets.http_messages_tree_view import HttpMessagesTreeView

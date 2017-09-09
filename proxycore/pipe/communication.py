@@ -1,13 +1,11 @@
 import asyncio
+import logging
 import traceback
 
 from typing import Union, Iterable
 
-import logging
-
-from proxy.parser.http_parser import HttpMessage, HttpResponse
-from proxy.pipe.endpoint import Endpoint, InputEndpoint, OutputEndpoint
-
+from proxycore.parser.http_parser import HttpMessage, HttpResponse
+from proxycore.pipe.endpoint import Endpoint, InputEndpoint, OutputEndpoint
 
 logger = logging.getLogger(__name__)
 

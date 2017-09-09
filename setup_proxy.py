@@ -1,14 +1,15 @@
 from setuptools import setup, find_packages
 
-import proxy
+import proxycore
 
 setup(
     name="http-proxy",
-    version=proxy.__version__,
+    version=proxycore.PYPROXY_VERSION,
     description="HTTP reverse proxy for debugging and packet manipulation - Core and CLI",
     author="Dusan Jakub",
     maintainer="Dusan Jakub",
-    packages=find_packages(include=['proxy.*']),
+    packages=find_packages(include=['proxycore', 'proxycore.*']),
+    py_modules=["setup", "setup_proxy"],
     install_requires=[
         "six", "PyHamcrest", "suds-sw==0.4.3"
     ],

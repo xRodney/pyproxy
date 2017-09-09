@@ -3,11 +3,11 @@ import sys
 
 import pytest
 
-from proxy.parser.http_parser import HttpRequest, get_http_request
-from proxy.parser.parser_utils import intialize_parser, parse
-from proxy.pipe.apipe import ProxyParameters, ProxyFlowDefinition
-from proxy.pipe.communication import Server
-from proxy.pipe.reporting import MessageListener
+from proxycore.parser.http_parser import HttpRequest, get_http_request
+from proxycore.parser.parser_utils import intialize_parser, parse
+from proxycore.pipe.apipe import ProxyParameters, ProxyFlowDefinition
+from proxycore.pipe.communication import Server
+from proxycore.pipe.reporting import MessageListener
 from test.dummy_io import TestReader, TestWriter
 
 __registered_flow = None
@@ -39,9 +39,9 @@ def monkeypatch_asyncio():
 
 @pytest.fixture
 def server():
-    import proxy.flows
+    import proxycore.flows
     proxy_parameters = ProxyParameters("localhost", 0, "remotehost", 456)
-    definition = ProxyFlowDefinition(proxy_parameters, proxy.flows, MessageListener())
+    definition = ProxyFlowDefinition(proxy_parameters, proxycore.flows, MessageListener())
     server = Server(definition)
     return server
 

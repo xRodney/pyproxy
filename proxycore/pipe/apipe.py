@@ -9,13 +9,13 @@ from threading import Thread
 
 from typing import Iterable
 
-import proxy.flows
-from proxy.pipe.communication import FlowDefinition, Server
-from proxy.pipe.endpoint import InputEndpoint, OutputEndpoint, Endpoint, InputEndpointParameters, EndpointParameters
-from proxy.pipe.logger import logger
-from proxy.pipe.recipe.flow import Flow
-from proxy.pipe.recipe.flow_finder import register_flows
-from proxy.pipe.reporting import MessageListener
+import proxycore.flows
+from proxycore.pipe.communication import FlowDefinition, Server
+from proxycore.pipe.endpoint import InputEndpoint, OutputEndpoint, Endpoint, InputEndpointParameters, EndpointParameters
+from proxycore.pipe.logger import logger
+from proxycore.pipe.recipe.flow import Flow
+from proxycore.pipe.recipe.flow_finder import register_flows
+from proxycore.pipe.reporting import MessageListener
 
 BUFFER_SIZE = 65536
 CONNECT_TIMEOUT_SECONDS = 5
@@ -70,7 +70,7 @@ class PipeThread(Thread):
     async def __start_proxy(self, proxy_parameters):
         assert threading.current_thread() is self
 
-        definition = ProxyFlowDefinition(proxy_parameters, proxy.flows, self.listener)
+        definition = ProxyFlowDefinition(proxy_parameters, proxycore.flows, self.listener)
         self.server = Server(definition)
         await self.server.start()
 
@@ -124,7 +124,7 @@ def main():
         print_usage_and_exit()
     else:
         loop = asyncio.get_event_loop()
-        definition = ProxyFlowDefinition(proxy_parameters, proxy.flows, MessageListener())
+        definition = ProxyFlowDefinition(proxy_parameters, proxycore.flows, MessageListener())
         server = Server(definition)
         loop.run_until_complete(server.start())
         try:

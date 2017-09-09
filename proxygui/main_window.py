@@ -6,10 +6,10 @@ from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox, \
     QFileDialog, QAction, QMenuBar
 
-from proxy.parser.http_parser import HttpMessage
-from proxy.pipe.apipe import ProxyParameters
-from proxy.pipe.persistence import parse_message_reports, serialize_message_reports
-from proxy.pipe.reporting import LogReport
+from proxycore.parser.http_parser import HttpMessage
+from proxycore.pipe.apipe import ProxyParameters
+from proxycore.pipe.persistence import parse_message_reports, serialize_message_reports
+from proxycore.pipe.reporting import LogReport
 from proxygui.plugins import PLUGINS
 from proxygui.plugins.plugin_registry import PluginRegistry
 from proxygui.widgets.connection_config import ConnectionConfig

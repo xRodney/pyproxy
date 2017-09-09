@@ -1,7 +1,7 @@
 import gzip
 from collections import OrderedDict
 
-from proxy.parser.parser_utils import get_bytes, get_word, get_rest, get_until
+from proxycore.parser.parser_utils import get_bytes, get_word, get_rest, get_until
 
 CRLF = "\r\n"
 

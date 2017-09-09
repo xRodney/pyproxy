@@ -1,5 +1,5 @@
-from proxy.parser.http_parser import get_http_request, HttpRequest
-from proxy.parser.parser_utils import parse, intialize_parser
+from proxycore.parser.http_parser import get_http_request, HttpRequest
+from proxycore.parser.parser_utils import parse, intialize_parser
 
 
 def chunks(l, n):

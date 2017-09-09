@@ -1,7 +1,7 @@
 import logging
 
-from proxy.pipe.importing import import_submodules
-from proxy.pipe.recipe.flow import Flow
+from proxycore.pipe.importing import import_submodules
+from proxycore.pipe.recipe.flow import Flow
 
 logger = logging.getLogger(__name__)
 
