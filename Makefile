@@ -5,6 +5,7 @@ venv:
 
 venv_install: venv
 	pip install --upgrade pip
+	pip install six
 	pip install -r requirements.txt
 
 test:
