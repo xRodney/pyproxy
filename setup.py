@@ -14,8 +14,10 @@ if is_core and is_gui:
                     "Please use setup_proxy.py or setup_gui.py")
 
 if is_core:
+    import setup_proxy
     exit(0)
 elif is_gui:
+    import setup_gui
     exit(0)
 
 raise Exception("The distribution must contain either http-proxy or http-proxy-gui subproject")
