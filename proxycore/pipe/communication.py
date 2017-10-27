@@ -54,6 +54,8 @@ class Dispatcher:
                     await endpoint.open_connection()
 
             await self.loop()
+        except GeneratorExit:
+            raise
         except Exception as e:
             trace = traceback.format_exception(e.__class__, e, e.__traceback__)
             trace = "".join(trace)
@@ -70,14 +72,20 @@ class Dispatcher:
             await writer.drain()
 
     async def loop(self):
+        futures = []
         try:
-            futures = []
             for endpoint in self.endpoints.values():
                 futures.append(asyncio.ensure_future(self.__loop1(endpoint)))
             await asyncio.gather(*futures, return_exceptions=True)
-        finally:
+        except GeneratorExit:
+            raise
+        except Exception:
             for endpoint in self.endpoints.values():
-                endpoint.close()
+                await endpoint.close()
+            raise
+        else:
+            for endpoint in self.endpoints.values():
+                await endpoint.close()
 
     async def __loop1(self, endpoint):
         async def _dispatch(message):

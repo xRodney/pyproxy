@@ -57,9 +57,9 @@ class Endpoint:
             traceback.print_exc()
             raise
 
-    def close(self):
+    async def close(self):
         if self.writer:
-            self.writer.close()
+            await self.writer.close()
             logger.info('close connection {}'.format(self.connection_string))
 
     async def on_received(self, message: HttpMessage):
