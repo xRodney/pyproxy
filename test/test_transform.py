@@ -7,7 +7,7 @@ from proxycore.parser.parser_utils import intialize_parser, parse
 from proxycore.pipe.apipe import ProxyParameters
 from proxycore.pipe.endpoint import ProcessingFinishedError, Processing
 from proxycore.pipe.recipe.flow import Flow
-from proxycore.pipe.recipe.matchers import has_method
+from proxycore.pipe.recipe.matchers import has_method, has_path_starting
 
 PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 
@@ -15,6 +15,11 @@ PARAMETERS = ProxyParameters("localhost", 8888, "remotehost.com", 80)
 @pytest.fixture
 def simple_get_request():
     return HttpRequest("GET", "/", headers={"Host": "localhost"})
+
+
+@pytest.fixture
+def simple_get_request_for_path():
+    return HttpRequest("GET", "/somepath", headers={"Host": "localhost"})
 
 
 @pytest.fixture
@@ -184,6 +189,43 @@ def test_fallback_flow(simple_get_request, simple_delete_request):
 
     assert target_endpoint == "local"
     assert response1.status == b"200"
+
+    processing1 = Processing("local", main_flow(simple_delete_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"404"
+
+
+def test_multiple_matchers(simple_get_request, simple_get_request_for_path, simple_delete_request):
+    main_flow = Flow(PARAMETERS)
+
+    class MyHandler:
+        flow = Flow()
+        fallback = flow.fallback().respond(HttpResponse(b"404", b"Not found", b"This is body"))
+
+        @flow.respond_when(has_method(b"GET"), has_path_starting(b"/somepath"))
+        def handle(self, request):
+            return HttpResponse(b"200", b"OK", b"This is body")
+
+        @flow.respond_when(has_method(b"GET"))
+        def handle(self, request):
+            return HttpResponse(b"201", b"??", b"This is body")
+
+    handler = MyHandler()
+    main_flow.delegate(handler.flow)
+
+    processing1 = Processing("local", main_flow(simple_get_request_for_path))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"200"
+
+    processing1 = Processing("local", main_flow(simple_get_request))
+    target_endpoint, response1 = processing1.send_message(None)
+
+    assert target_endpoint == "local"
+    assert response1.status == b"201"
 
     processing1 = Processing("local", main_flow(simple_delete_request))
     target_endpoint, response1 = processing1.send_message(None)

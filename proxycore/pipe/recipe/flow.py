@@ -82,11 +82,8 @@ class Flow:
         else:
             return branch
 
-    def when(self, matcher: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
-        if callable(matcher):
-            matcher = LambdaMatcher(matcher)
-
-        flow = GuardedFlow(matcher, self.__parameters)
+    def when(self, *matchers: Union[Matcher, Callable[[Any], bool]]) -> "Flow":
+        flow = GuardedFlow(matchers, self.__parameters)
         return self.delegate(flow)
 
     def transform(self, transform: Transform):
@@ -165,27 +162,35 @@ class Flow:
             self.__fallback.parameters = self.parameters
         return self.__fallback
 
-    def respond_when(self, matcher):
+    def respond_when(self, *matchers):
         """
         Shortcut to self.when(matcher).respond.
         The purpose of this method is to be used as a decorator.
         
-        :param matcher: 
-        :return: A function that, when invoked, will register its parameter as a responder. See #respond.
+        :param matchers:
+        :return: function that, when invoked, will register its parameter as a responder. See #respond.
         """
-        return self.when(matcher).respond
+        return self.when(*matchers).respond
 
 
 class GuardedFlow(Flow):
-    def __init__(self, guard, parameters=None):
+    def __init__(self, guards, parameters=None):
         super().__init__(parameters)
-        self.__guard = guard
+        if isinstance(guards, (list, tuple)):
+            self.__guards = [self.__convert_matcher(x) for x in guards]
+        else:
+            self.__guards = (self.__convert_matcher(guards),)
 
     def __call__(self, request: HttpRequest):
-        if not self.__guard.matches(request):
-            raise DoesNotAccept()
+        for g in self.__guards:
+            if not g.matches(request):
+                raise DoesNotAccept()
 
         return super().__call__(request)
+
+    @staticmethod
+    def __convert_matcher(x):
+        return LambdaMatcher(x) if callable(x) else x
 
 
 class TransformingFlow(Flow):
