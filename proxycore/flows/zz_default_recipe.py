@@ -46,8 +46,8 @@ class DefaultTransform(Transform):
     def transform(self, request: HttpRequest, proxy: Flow, next_in_chain) -> HttpRequest:
         original_host = None
         new_host = None
-        if request.headers.get(b"Host"):
-            if proxy.parameters.remote_port == 80:
+        if request.headers.get(b"Host") and hasattr(proxy.parameters, "remote_address"):
+            if hasattr(proxy.parameters, "remote_port") and proxy.parameters.remote_port == 80:
                 new_host = self.remote_address_without_port(proxy.parameters)
             else:
                 new_host = self.remote_address_with_port(proxy.parameters)
