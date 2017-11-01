@@ -49,7 +49,9 @@ class ServerThread(Thread):
         asyncio.set_event_loop(self.event_loop)
         self.event_loop.run_until_complete(self.server.start())
         try:
-            self.event_loop.run_forever()
+            # TODO: Can run_forever be used here?
+            while self.__is_running:
+                self.event_loop.run_until_complete(asyncio.sleep(10))
         except KeyboardInterrupt:
             pass
 
