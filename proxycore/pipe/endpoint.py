@@ -59,7 +59,7 @@ class Endpoint:
 
     async def close(self):
         if self.writer:
-            await self.writer.close()
+            self.writer.close()
             logger.info('close connection {}'.format(self.connection_string))
 
     async def on_received(self, message: HttpMessage):

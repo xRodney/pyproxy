@@ -1,6 +1,7 @@
 import sys
 
 import asyncio
+from threading import Thread
 
 import proxycore.flows
 from proxycore.pipe.apipe import parse_addr_port_string
@@ -28,6 +29,34 @@ class ServerFlowDefinition(FlowDefinition):
 
     def endpoints(self):
         yield InputEndpoint("local", InputEndpointParameters(self.address, self.port, None))
+
+    def print(self):
+        print("Server on {}:{}".format(self.address, self.port))
+
+
+class ServerThread(Thread):
+    def __init__(self, server):
+        Thread.__init__(self)
+        self.server = server
+        self.event_loop = None
+        self.__is_running = False
+
+    def run(self):
+        print(self.server.print())
+        self.__is_running = True
+
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.event_loop.run_until_complete(self.server.start())
+        try:
+            self.event_loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+
+    def stop(self):
+        self.__is_running = False
+        if self.event_loop:
+            self.event_loop.stop()
 
 
 def print_usage_and_exit():
@@ -60,7 +89,7 @@ def main():
         except KeyboardInterrupt:
             pass
 
-        loop.run_until_complete(server.close())
+        loop.stop()
 
 
 if __name__ == '__main__':

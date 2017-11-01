@@ -22,6 +22,9 @@ class FlowDefinition:
     def reset(self):
         pass
 
+    def print(self):
+        print("Please override method FlowDefinition.print")
+
 
 class Dispatcher:
     def __init__(self, flow_definition: FlowDefinition):
@@ -132,3 +135,6 @@ class Server:
                     await future.wait_closed()
         except Exception as e:
             print("Error closing the server: {}".format(e))
+
+    def print(self):
+        self.flow_definition.print()
