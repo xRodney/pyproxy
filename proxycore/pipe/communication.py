@@ -27,9 +27,10 @@ class FlowDefinition:
 
 
 class Dispatcher:
-    def __init__(self, flow_definition: FlowDefinition):
+    def __init__(self, flow_definition: FlowDefinition, finish_callback=None):
         self.endpoints = {}
         self.flow_definition = flow_definition
+        self.finish_callback = finish_callback
         for endpoint in flow_definition.endpoints():
             self.add_endpoint(endpoint)
 
@@ -83,12 +84,17 @@ class Dispatcher:
         except GeneratorExit:
             raise
         except Exception:
-            for endpoint in self.endpoints.values():
-                await endpoint.close()
+            await self.close()
             raise
         else:
-            for endpoint in self.endpoints.values():
-                await endpoint.close()
+            await self.close()
+        finally:
+            if self.finish_callback:
+                self.finish_callback(self)
+
+    async def close(self):
+        for endpoint in self.endpoints.values():
+            await endpoint.close()
 
     async def __loop1(self, endpoint):
         async def _dispatch(message):
@@ -101,6 +107,7 @@ class Server:
     def __init__(self, flow_definition: FlowDefinition):
         self.flow_definition = flow_definition
         self.servers = []
+        self.open_dispatchers = set()
 
     async def start(self):
         self.flow_definition.reset()
@@ -122,19 +129,28 @@ class Server:
         return await endpoint.listen(_handle_client)
 
     async def handle_client(self, reader, writer, endpoint_name):
-        dispatcher = Dispatcher(self.flow_definition)
+        dispatcher = Dispatcher(self.flow_definition, self.client_finished)
+        self.open_dispatchers.add(dispatcher)
         await dispatcher.handle_client(endpoint_name, reader, writer)
 
-    async def close(self, wait_closed=False):
-        try:
-            for future in self.servers:
-                future.close()
+    def client_finished(self, dispatcher):
+        self.open_dispatchers.discard(dispatcher)
 
-            if wait_closed:
-                for future in self.servers:
-                    await future.wait_closed()
-        except Exception as e:
-            print("Error closing the server: {}".format(e))
+    def close(self):
+        for future in self.servers:
+            try:
+                future.close()
+            except Exception as e:
+                print("Error closing the server: {}".format(e))
+
+    async def kill(self):
+        self.close()
+        for dispatcher in self.open_dispatchers:
+            await dispatcher.close()
+
+    async def wait_closed(self):
+        futures = [s.wait_closed() for s in self.servers]
+        await asyncio.gather(*futures)
 
     def print(self):
         self.flow_definition.print()
