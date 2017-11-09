@@ -45,7 +45,14 @@ class Dispatcher:
         processing, target_endpoint, message_to_send = await source_endpoint.on_received(received_message)
 
         if isinstance(target_endpoint, str):
-            target_endpoint = self.endpoints[target_endpoint]
+            if target_endpoint in self.endpoints:
+                target_endpoint = self.endpoints[target_endpoint]
+            else:
+                message_to_send = HttpResponse(b"500", b"Proxy error",
+                                               "Endpoint {} does not exist".format(target_endpoint))
+                target_endpoint = processing.source_endpoint
+                if isinstance(target_endpoint, str):
+                    target_endpoint = self.endpoints[target_endpoint]
 
         await target_endpoint.send(message_to_send, processing)
 
