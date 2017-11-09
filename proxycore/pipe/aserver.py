@@ -3,6 +3,8 @@ import sys
 import asyncio
 from threading import Thread
 
+import time
+
 import proxycore.flows
 from proxycore.pipe.apipe import parse_addr_port_string
 from proxycore.pipe.communication import FlowDefinition, Server
@@ -39,12 +41,9 @@ class ServerThread(Thread):
         Thread.__init__(self)
         self.server = server
         self.event_loop = None
-        self.__is_running = False
 
     def run(self):
-        print(self.server.print())
-        self.__is_running = True
-
+        self.server.print()
         self.event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.event_loop)
         self.event_loop.run_until_complete(self.server.start())
@@ -54,10 +53,7 @@ class ServerThread(Thread):
             pass
 
     def stop(self):
-        self.__is_running = False
-        self.server.kill()
-        if self.event_loop:
-            self.event_loop.stop()
+        asyncio.run_coroutine_threadsafe(self.server.kill(), self.event_loop)
         self.join()
 
 
@@ -70,28 +66,28 @@ def print_usage_and_exit():
 
 def main():
     try:
-        if (len(sys.argv) != 3):
+        if (len(sys.argv) < 2):
             raise Exception("arguments")
         (local_address, local_port) = parse_addr_port_string(sys.argv[1])
-        timeout = int(sys.argv[2])
         server_parameters = ServerParameters(local_address, local_port)
     except:
         print_usage_and_exit()
     else:
-        loop = asyncio.get_event_loop()
         flow = register_flows(proxycore.flows, Flow(server_parameters))
         definition = ServerFlowDefinition(server_parameters, flow)
         server = Server(definition)
-        loop.run_until_complete(server.start())
+        thread = ServerThread(server)
+        thread.start()
         try:
-            if timeout > 0:
-                loop.run_until_complete(asyncio.sleep(timeout))
-            else:
-                loop.run_forever()
+            while True:
+                print("Server is running, CTRL+C to terminate")
+                time.sleep(10)
         except KeyboardInterrupt:
             pass
 
-        loop.stop()
+        print("Terminating")
+        thread.stop()
+        print("Terminated")
 
 
 if __name__ == '__main__':
