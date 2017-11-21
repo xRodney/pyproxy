@@ -79,12 +79,16 @@ class InputEndpoint(Endpoint):
         flow = self.flow(message)
         processing = Processing(self.name, flow, listener=self.parameters.listener)
         processing.log_request(self.name, message)
+        processing.last_request = message
         endpoint_name, message = processing.send_message(None)
         return processing, endpoint_name, message
 
     async def send(self, message: HttpMessage, processing):
         processing.log_response(self.name, message)
         await self._write_message(message)
+        if processing.last_request.version == b"HTTP/1.0" \
+                or processing.last_request.headers.get(b"Connection", b"") == b"close":
+            await self.close()
 
     async def listen(self, handle_client):
         try:
