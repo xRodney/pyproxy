@@ -83,7 +83,7 @@ class PipeThread(Thread):
     async def __stop_proxy(self):
         assert threading.current_thread() is self
         if self.server:
-            await self.server.close(wait_closed=True)
+            await self.server.close()
         self.server = None
 
     def is_running(self):
